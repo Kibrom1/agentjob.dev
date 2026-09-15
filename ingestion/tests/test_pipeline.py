@@ -14,15 +14,22 @@ from agentjobs_ingest.supabase import DatabaseError
 
 
 class FakeDatabase:
-    def __init__(self, fail=False):
+    def __init__(self, fail=False, fail_log=False):
         self.calls = []
+        self.logged = []
         self.fail = fail
+        self.fail_log = fail_log
 
     def upsert(self, source_name, jobs, close_missing):
         self.calls.append((source_name, jobs, close_missing))
         if self.fail:
             raise DatabaseError("boom", 500)
         return {"inserted": len(jobs), "updated": 0, "skipped": 0, "failed": 0, "closed": 1, "errors": []}
+
+    def log_run(self, report):
+        if self.fail_log:
+            raise DatabaseError("log boom", 500)
+        self.logged.append(report)
 
 
 def greenhouse_fetcher(load_fixture):
@@ -52,6 +59,10 @@ def test_pipeline_filters_normalises_and_upserts(load_fixture, source):
     # Malformed rows in the feed make the snapshot untrustworthy: never close.
     assert close_missing is False
     assert report.database["inserted"] == 1
+    # Every run — success or failure — is logged for observability.
+    assert db.logged == [report]
+    assert report.started_at is not None and report.finished_at is not None
+    assert report.finished_at >= report.started_at
 
 
 def test_clean_complete_feed_closes_missing(source):
@@ -85,6 +96,8 @@ def test_fetch_failures_are_reported_without_db_calls(source, error, status):
         report = run_source(source, failing, client, db)
     assert report.status == status
     assert db.calls == []
+    # Fetch failures are still logged, so a silently-broken source is visible.
+    assert db.logged == [report]
 
 
 def test_no_relevant_jobs_skips_database(source):
@@ -93,14 +106,27 @@ def test_no_relevant_jobs_skips_database(source):
         report = run_source(source, lambda c, b: FetchResult([], complete=True), client, db)
     assert report.status == "no_relevant_jobs"
     assert db.calls == []
+    assert db.logged == [report]
 
 
 def test_dry_run_and_database_failure(load_fixture, source):
     with httpx.Client() as client:
         dry = run_source(source, greenhouse_fetcher(load_fixture), client, None)
-        failed = run_source(source, greenhouse_fetcher(load_fixture), client, FakeDatabase(fail=True))
+        failed_db = FakeDatabase(fail=True)
+        failed = run_source(source, greenhouse_fetcher(load_fixture), client, failed_db)
     assert dry.status == "dry_run" and dry.relevant == 1
     assert failed.status == "db_failed" and "boom" in (failed.error or "")
+    # A dry run has no database to log to; a real database still gets the
+    # failure logged so it shows up in the ops report.
+    assert failed_db.logged == [failed]
+
+
+def test_logging_failure_does_not_fail_the_pipeline(load_fixture, source):
+    db = FakeDatabase(fail_log=True)
+    with httpx.Client() as client:
+        report = run_source(source, greenhouse_fetcher(load_fixture), client, db)
+    assert report.status == "ok"
+    assert report.database["inserted"] == 1
 
 
 def test_run_dispatches_by_provider(source):

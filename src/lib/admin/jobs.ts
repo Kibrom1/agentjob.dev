@@ -28,6 +28,23 @@ export type AdminJobRow = Pick<
   | "category_slug"
 > & { employer: { email: string } | null };
 
+const ingestionLastRunSchema = z.object({
+  source_name: z.string(),
+  status: z.string(),
+  fetched: z.number(),
+  relevant: z.number(),
+  inserted: z.number(),
+  updated: z.number(),
+  skipped: z.number(),
+  failed: z.number(),
+  closed: z.number(),
+  error: z.string().nullable(),
+  started_at: z.string(),
+  finished_at: z.string(),
+});
+
+export type IngestionLastRun = z.infer<typeof ingestionLastRunSchema>;
+
 const statsSchema = z.object({
   jobs_by_status: z.record(z.string(), z.number()),
   jobs_by_source: z.record(z.string(), z.number()),
@@ -46,6 +63,9 @@ const statsSchema = z.object({
       completed_at: z.string().nullable(),
     })
     .nullable(),
+  // Optional/default so a stats payload from before this migration (or a
+  // stale PostgREST schema cache) still validates instead of throwing.
+  ingestion_last_runs: z.array(ingestionLastRunSchema).default([]),
 });
 
 export type AdminStats = z.infer<typeof statsSchema>;

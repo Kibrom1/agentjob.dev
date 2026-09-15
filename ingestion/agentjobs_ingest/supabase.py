@@ -8,7 +8,7 @@ import httpx
 
 from agentjobs_ingest import USER_AGENT
 from agentjobs_ingest.config import Settings
-from agentjobs_ingest.models import NormalizedJob
+from agentjobs_ingest.models import NormalizedJob, SourceReport
 
 #: Mirrors the per-call cap enforced by public.upsert_ingested_jobs.
 MAX_BATCH = 2000
@@ -69,3 +69,43 @@ class IngestionDatabase:
         if not isinstance(result, dict):
             raise DatabaseError("upsert_ingested_jobs returned an unexpected payload", response.status_code)
         return result
+
+    def log_run(self, report: SourceReport) -> None:
+        """Records one ingestion_runs row for observability. Best-effort by
+        design of the caller (pipeline.run_source): a logging failure is
+        caught there and never fails the ingestion run itself."""
+        if report.started_at is None or report.finished_at is None:
+            raise ValueError("report.started_at/finished_at must be set before logging")
+
+        database = report.database
+        response = self._client.post(
+            f"{self._settings.supabase_url}/rest/v1/rpc/log_ingestion_run",
+            headers={
+                **auth_headers(self._settings.service_role_key),
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": USER_AGENT,
+            },
+            json={
+                "p_source_name": report.source_name,
+                "p_status": report.status,
+                "p_fetched": report.fetched,
+                "p_relevant": report.relevant,
+                "p_inserted": database.get("inserted", 0) if isinstance(database.get("inserted"), int) else 0,
+                "p_updated": database.get("updated", 0) if isinstance(database.get("updated"), int) else 0,
+                "p_skipped": database.get("skipped", 0) if isinstance(database.get("skipped"), int) else 0,
+                "p_failed": database.get("failed", 0) if isinstance(database.get("failed"), int) else 0,
+                "p_closed": database.get("closed", 0) if isinstance(database.get("closed"), int) else 0,
+                "p_error": report.error,
+                "p_started_at": report.started_at.isoformat(),
+                "p_finished_at": report.finished_at.isoformat(),
+            },
+        )
+        if response.status_code >= 400:
+            message = response.text[:500]
+            try:
+                body = response.json()
+                message = body.get("message", message)
+            except ValueError:
+                pass
+            raise DatabaseError(f"log_ingestion_run failed ({response.status_code}): {message}", response.status_code)

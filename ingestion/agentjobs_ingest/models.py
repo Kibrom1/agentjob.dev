@@ -77,6 +77,9 @@ class SourceReport:
     closed_missing: bool = False
     database: dict[str, object] = field(default_factory=dict)
     error: str | None = None
+    #: Set by run_source; used to write an ingestion_runs row for observability.
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)

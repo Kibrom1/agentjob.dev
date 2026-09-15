@@ -1,11 +1,12 @@
 import json
+from datetime import datetime, timezone
 
 import httpx
 import pytest
 import respx
 
 from agentjobs_ingest.config import ConfigError, Settings, load_settings, load_sources, parse_sources
-from agentjobs_ingest.models import NormalizedJob
+from agentjobs_ingest.models import NormalizedJob, SourceReport
 from agentjobs_ingest.supabase import MAX_BATCH, DatabaseError, IngestionDatabase, auth_headers
 
 
@@ -114,3 +115,53 @@ def test_upsert_enforces_batch_cap():
     db = IngestionDatabase(Settings("https://x.supabase.co", "k" * 30), httpx.Client())
     with pytest.raises(ValueError):
         db.upsert("lever:acme", [job(str(i)) for i in range(MAX_BATCH + 1)], close_missing=False)
+
+
+@respx.mock
+def test_log_run_posts_rpc_payload():
+    route = respx.post("https://x.supabase.co/rest/v1/rpc/log_ingestion_run").respond(json="00000000-0000-0000-0000-000000000001")
+    db = IngestionDatabase(Settings("https://x.supabase.co", "sb_secret_abc"), httpx.Client())
+    report = SourceReport(
+        source_name="lever:acme",
+        status="ok",
+        fetched=5,
+        relevant=2,
+        database={"inserted": 1, "updated": 1, "skipped": 0, "failed": 0, "closed": 0, "errors": []},
+        started_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        finished_at=datetime(2026, 1, 1, 0, 0, 30, tzinfo=timezone.utc),
+    )
+    db.log_run(report)
+    body = json.loads(route.calls.last.request.content)
+    assert body == {
+        "p_source_name": "lever:acme",
+        "p_status": "ok",
+        "p_fetched": 5,
+        "p_relevant": 2,
+        "p_inserted": 1,
+        "p_updated": 1,
+        "p_skipped": 0,
+        "p_failed": 0,
+        "p_closed": 0,
+        "p_error": None,
+        "p_started_at": "2026-01-01T00:00:00+00:00",
+        "p_finished_at": "2026-01-01T00:00:30+00:00",
+    }
+
+
+def test_log_run_requires_timestamps():
+    db = IngestionDatabase(Settings("https://x.supabase.co", "k" * 30), httpx.Client())
+    with pytest.raises(ValueError, match="started_at/finished_at"):
+        db.log_run(SourceReport(source_name="lever:acme"))
+
+
+@respx.mock
+def test_log_run_surfaces_postgrest_errors():
+    respx.post("https://x.supabase.co/rest/v1/rpc/log_ingestion_run").respond(500, json={"message": "db is down"})
+    db = IngestionDatabase(Settings("https://x.supabase.co", "k" * 30), httpx.Client())
+    report = SourceReport(
+        source_name="lever:acme",
+        started_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        finished_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
+    )
+    with pytest.raises(DatabaseError, match="db is down"):
+        db.log_run(report)

@@ -267,6 +267,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      ingestion_runs: {
+        Row: {
+          closed: number;
+          error: string | null;
+          failed: number;
+          fetched: number;
+          finished_at: string;
+          id: string;
+          inserted: number;
+          relevant: number;
+          skipped: number;
+          source_name: string;
+          started_at: string;
+          status: string;
+          updated: number;
+        };
+        Insert: {
+          closed?: number;
+          error?: string | null;
+          failed?: number;
+          fetched?: number;
+          finished_at?: string;
+          id?: string;
+          inserted?: number;
+          relevant?: number;
+          skipped?: number;
+          source_name: string;
+          started_at: string;
+          status: string;
+          updated?: number;
+        };
+        Update: {
+          closed?: number;
+          error?: string | null;
+          failed?: number;
+          fetched?: number;
+          finished_at?: string;
+          id?: string;
+          inserted?: number;
+          relevant?: number;
+          skipped?: number;
+          source_name?: string;
+          started_at?: string;
+          status?: string;
+          updated?: number;
+        };
+        Relationships: [];
+      };
       subscribers: {
         Row: {
           created_at: string;
@@ -342,6 +390,23 @@ export type Database = {
       finish_digest_run: {
         Args: { p_job_count: number; p_run_id: string; p_status: string };
         Returns: undefined;
+      };
+      log_ingestion_run: {
+        Args: {
+          p_closed: number;
+          p_error: string | null;
+          p_failed: number;
+          p_fetched: number;
+          p_finished_at: string;
+          p_inserted: number;
+          p_relevant: number;
+          p_skipped: number;
+          p_source_name: string;
+          p_started_at: string;
+          p_status: string;
+          p_updated: number;
+        };
+        Returns: string;
       };
       expire_jobs: {
         Args: Record<PropertyKey, never>;

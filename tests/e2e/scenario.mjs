@@ -311,6 +311,27 @@ async function main() {
     await admin.close();
   });
 
+  await step("ops report requires the cron secret and reflects live state", async () => {
+    assert.equal((await fetch(`${APP}/api/ops/report`)).status, 401);
+
+    const report = await getJson(`${APP}/api/ops/report`, { headers: { authorization: `Bearer ${CRON_SECRET}` } });
+    assert.equal(typeof report.generatedAt, "string");
+    assert.ok(Array.isArray(report.flags));
+    assert.ok(Array.isArray(report.stats.ingestion_last_runs));
+    assert.equal(typeof report.summary, "string");
+    // The just-rejected job and the newly curated one should already be reflected.
+    assert.ok(report.stats.live_jobs >= 1);
+    assert.ok(report.summary.includes("Live jobs:"));
+  });
+
+  await step("public recent-jobs feed powers marketing drafts", async () => {
+    const recent = await getJson(`${APP}/api/jobs/recent?days=14`);
+    assert.ok(Array.isArray(recent.jobs));
+    assert.ok(recent.jobs.some((job) => job.title === "Curated Multi-Agent Researcher"));
+    // Rejected jobs must never leak into a public feed.
+    assert.ok(!recent.jobs.some((job) => job.title === "Senior MCP Integrations Engineer"));
+  });
+
   await step("public endpoints stay healthy", async () => {
     const health = await getJson(`${APP}/api/health`);
     assert.equal(health.status, "ok");

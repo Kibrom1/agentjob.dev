@@ -28,6 +28,8 @@ Vercel Cron (daily) ─▶ /api/cron/maintenance ─▶ run_maintenance()       
 Admin ── Basic auth ─▶ /admin (proxy.ts + per-action check, service role)   │
 Mail client ─ POST ──▶ /api/unsubscribe/[token] (RFC 8058 one-click)        │
 GitHub Actions (6h) ─▶ python -m agentjobs_ingest ─▶ upsert_ingested_jobs ──┤
+Ops agent (daily) ──▶ /api/ops/report (read-only, CRON_SECRET),            │
+                       /api/jobs/recent (public) ─▶ drafts + a digest to you
                                                                             ▼
                                      Supabase Postgres (+ pg_cron every 15 min)
 ```
@@ -67,14 +69,16 @@ src/
     api/cron/digest, api/cron/maintenance
     api/unsubscribe/[token]              one-click unsubscribe
     api/health                           checks the app and the database for uptime monitors
+    api/ops/report                       observability + flags for the ops agent (CRON_SECRET)
+    api/jobs/recent                      public feed of recent listings, for marketing drafts
     actions.ts                           digest signup
   components/                            UI (post-job/, admin/, feed components)
   lib/
-    posting/  stripe/  email/  digest/  admin/  supabase/
+    posting/  stripe/  email/  digest/  admin/  supabase/  ops/
     env.ts (config checks per feature) · rate-limit.ts · jobs.ts · validation.ts
   proxy.ts                               Basic-auth gate for /admin
-supabase/migrations/                     5 migrations (schema → posting/ingestion/digest → admin)
-db/tests/                                SQL contract tests (schema, operations, admin)
+supabase/migrations/                     6 migrations (schema → posting/ingestion/digest → admin → ops observability)
+db/tests/                                SQL contract tests (schema, operations, admin, ops observability)
 ingestion/                               Python package, sources.yaml, pytest suite
 tests/unit/                              Vitest unit and integration tests
 tests/e2e/                               PostgREST shim, Stripe/Resend doubles, Playwright scenario
@@ -178,10 +182,10 @@ A generic role at an AI company doesn't qualify on company boilerplate alone.
 
 | Command | What it covers |
 | --- | --- |
-| `npm test` | Vitest (92 tests): posting schema, pricing, Checkout parameters, Stripe fulfillment and webhook route (real signatures), digest batching and resume, email templates, Resend retries, admin/cron authentication, env checks, search and formatting |
-| `npm run test:ingest` | pytest (89 tests): Greenhouse/Lever/Ashby parsers (recorded-shape fixtures), pagination, retries, classifier, normalizer, pipeline safety rules, CLI, config, RPC client |
-| `npm run test:db` | SQL contract tests on real Postgres: schema, RLS, grants, every RPC and lifecycle transition. Set `RUN_INGEST_CONTRACT=1` to also check that Python payloads are accepted by the real RPC. |
-| `npm run test:e2e` | 16-step Playwright scenario (details below) |
+| `npm test` | Vitest (104 tests): posting schema, pricing, Checkout parameters, Stripe fulfillment and webhook route (real signatures), digest batching and resume, email templates, Resend retries, admin/cron authentication, ops report flags, env checks, search and formatting |
+| `npm run test:ingest` | pytest (98 tests): Greenhouse/Lever/Ashby parsers (recorded-shape fixtures), pagination, retries, classifier, normalizer, pipeline safety rules (including ingestion-run logging), CLI, config, RPC client |
+| `npm run test:db` | SQL contract tests on real Postgres: schema, RLS, grants, every RPC and lifecycle transition, ingestion observability. Set `RUN_INGEST_CONTRACT=1` to also check that Python payloads are accepted by the real RPC. |
+| `npm run test:e2e` | 18-step Playwright scenario (details below) |
 | `npm run check` | typecheck, lint, unit tests and build |
 
 The two database suites need `DATABASE_ADMIN_URL=postgres://postgres:postgres@localhost:5432/postgres`. They create and drop their own throwaway databases.
@@ -192,7 +196,7 @@ The two database suites need `DATABASE_ADMIN_URL=postgres://postgres:postgres@lo
 - the late-webhook fallback, cancel and restore of a draft, and expired checkouts
 - featured pinning and search
 - digest signup, sending, one-click unsubscribe and the confirmation page
-- cron authentication, admin moderation, curated listings, health checks and the sitemap
+- cron authentication, admin moderation, curated listings, the ops report and recent-jobs feed, health checks and the sitemap
 
 It needs Chromium: run `npx playwright install chromium` once.
 
@@ -258,3 +262,5 @@ If the rate limiter itself fails, requests are allowed through rather than block
 **Refunds and disputes.** Handle them in Stripe, then reject the listing in `/admin`.
 
 **Changing prices.** Edit `src/lib/posting/pricing.ts`. The webhook checks payments against these same values.
+
+**Ops agent.** A daily scheduled task reads `GET /api/ops/report` (Bearer `CRON_SECRET` — same secret as the other cron routes, nothing new to generate) and `GET /api/jobs/recent`, then sends you a short digest: anything that needs attention (a stalled ingestion source, a stuck digest run, an empty board) plus draft social posts for newly published listings. It is read-only — no admin action or social post happens without you. See [`docs/ops-agent.md`](docs/ops-agent.md) for the design, and point it at your deployed URL once the site is live.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime, timezone
 from typing import Protocol
 
 import httpx
@@ -22,6 +23,7 @@ Fetcher = Callable[[httpx.Client, str], FetchResult]
 
 class Database(Protocol):
     def upsert(self, source_name: str, jobs: list[NormalizedJob], close_missing: bool) -> Mapping[str, object]: ...
+    def log_run(self, report: SourceReport) -> None: ...
 
 
 def select_jobs(result: FetchResult, source: SourceConfig, report: SourceReport) -> list[NormalizedJob]:
@@ -39,6 +41,30 @@ def select_jobs(result: FetchResult, source: SourceConfig, report: SourceReport)
 
 
 def run_source(
+    source: SourceConfig,
+    fetcher: Fetcher,
+    client: httpx.Client,
+    database: Database | None,
+) -> SourceReport:
+    """Runs one source and, when a database is supplied, always logs the
+    outcome to `ingestion_runs` — including failures — so a source that has
+    gone quiet or started erroring is visible without reading CI logs."""
+    started_at = datetime.now(timezone.utc)
+    report = _run_source(source, fetcher, client, database)
+    report.started_at = started_at
+    report.finished_at = datetime.now(timezone.utc)
+
+    if database is not None:
+        try:
+            database.log_run(report)
+        except (DatabaseError, httpx.HTTPError) as exc:
+            # Observability must never take down ingestion itself.
+            log.error("%s: failed to log ingestion run: %s", source.source_name, exc)
+
+    return report
+
+
+def _run_source(
     source: SourceConfig,
     fetcher: Fetcher,
     client: httpx.Client,
