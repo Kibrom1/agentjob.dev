@@ -15,9 +15,15 @@ export function SiteHeader() {
           </Link>
           <Link
             href={{ pathname: "/", hash: "subscribe" }}
-            className="rounded-md bg-zinc-900 px-3 py-1.5 font-medium whitespace-nowrap text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            className="hidden rounded-md px-3 py-1.5 whitespace-nowrap text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 sm:inline-flex dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >
             Weekly digest
+          </Link>
+          <Link
+            href="/post-a-job"
+            className="rounded-md bg-zinc-900 px-3 py-1.5 font-medium whitespace-nowrap text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+          >
+            Post a job
           </Link>
         </nav>
       </div>

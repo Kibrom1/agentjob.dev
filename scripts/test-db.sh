@@ -42,5 +42,13 @@ for migration in "$ROOT_DIR"/supabase/migrations/*.sql; do
   psql "$TEST_URL" -q -v ON_ERROR_STOP=1 -f "$migration"
 done
 
-echo "→ running schema tests"
-psql "$TEST_URL" -q -v ON_ERROR_STOP=1 -f "$ROOT_DIR/db/tests/10_schema.test.sql"
+for test_file in "$ROOT_DIR"/db/tests/*.test.sql; do
+  echo "→ running $(basename "$test_file")"
+  psql "$TEST_URL" -q -v ON_ERROR_STOP=1 -f "$test_file"
+done
+
+# Optional: verify the Python ingestion payloads against the real RPC.
+if [[ "${RUN_INGEST_CONTRACT:-0}" == "1" ]]; then
+  echo "→ running ingestion ↔ database contract test"
+  (cd "$ROOT_DIR/ingestion" && AGENTJOBS_TEST_DATABASE_URL="$TEST_URL" python3 -m pytest tests/test_db_contract.py)
+fi

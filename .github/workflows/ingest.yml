@@ -1,0 +1,56 @@
+name: Ingest jobs
+
+on:
+  schedule:
+    # Every 6 hours, at minute 17 to avoid the top-of-hour rush.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Fetch and classify only (no database writes)"
+        type: boolean
+        default: false
+      source:
+        description: "Limit to one source, e.g. ashby:langchain (optional)"
+        type: string
+        required: false
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ingestion
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ingestion/pyproject.toml
+      - run: pip install -e .
+      - name: Run ingestion
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          SOURCE: ${{ inputs.source }}
+        run: |
+          args=(run --output "$RUNNER_TEMP/ingest-summary.json")
+          if [[ "$DRY_RUN" == "true" ]]; then args+=(--dry-run); fi
+          if [[ -n "$SOURCE" ]]; then args+=(--source "$SOURCE"); fi
+          python -m agentjobs_ingest "${args[@]}"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingest-summary
+          path: ${{ runner.temp }}/ingest-summary.json
+          if-no-files-found: ignore

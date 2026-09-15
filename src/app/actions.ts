@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { consumeRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 import { getPublicDbClient } from "@/lib/supabase/server";
 import { emailSchema } from "@/lib/validation";
 
@@ -41,6 +42,10 @@ export async function subscribeToDigest(_previous: SubscribeState, formData: For
   }
 
   const source = sourceSchema.parse(readString(formData, "source"));
+
+  if (!(await consumeRateLimit(RATE_LIMITS.subscribe))) {
+    return { status: "error", message: "Too many signups from your network. Please try again later.", email: rawEmail };
+  }
 
   try {
     const { error } = await getPublicDbClient().rpc("subscribe_to_digest", {

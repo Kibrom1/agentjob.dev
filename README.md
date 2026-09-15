@@ -1,172 +1,260 @@
 # AgentJobs.dev
 
-A focused job board for **AI agent and multi-agent systems engineers**: orchestration, tool-use backends, local LLM infrastructure, retrieval and memory, evals.
+A job board for **AI agent and multi-agent systems engineers**: orchestration, tool-use backends, local LLM infrastructure, retrieval and memory, evals.
 
-Stack: **Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · Supabase (PostgreSQL) · TypeScript (strict)**.
-
-This repository is at **Phase 1: core initialisation and database schema**. The public feed, search, filters, job pages and the digest signup all run against the real schema.
-
----
-
-## Quick start
-
-```bash
-nvm use                      # Node 22 (see .nvmrc; Next 16 needs >= 20.9)
-npm ci
-cp .env.example .env.local   # fill in SUPABASE_URL and SUPABASE_ANON_KEY
-
-# Apply the schema to your Supabase project
-npx supabase link --project-ref <your-project-ref>
-npx supabase db push
-
-npm run dev                  # http://localhost:3000
-```
-
-| Script | What it does |
+| Layer | Technology |
 | --- | --- |
-| `npm run dev` | Dev server |
-| `npm run build` / `npm start` | Production build and server. The build needs **no** database credentials. |
-| `npm run typecheck` | Generates Next route types, then runs `tsc --noEmit` |
-| `npm run lint` | ESLint (Next core-web-vitals + TypeScript rules; `TODO`/`FIXME` comments fail the lint) |
-| `npm run check` | Typecheck, lint and build |
-| `npm run test:db` | Applies every migration to a throwaway Postgres database and runs the schema contract tests (needs `psql` and `DATABASE_ADMIN_URL`) |
+| Web app | Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · TypeScript (strict) |
+| Data | Supabase Postgres (RLS, column grants, SQL RPCs) |
+| Payments | Stripe Checkout and webhooks |
+| Email | Resend: weekly digest and posting confirmations |
+| Ingestion | Python 3.11+ reading public Greenhouse, Lever and Ashby job boards |
+| Hosting | Vercel (the app and its scheduled jobs) and GitHub Actions (ingestion) |
 
-### Environment
-
-| Variable | Required | Notes |
-| --- | --- | --- |
-| `SUPABASE_URL` | yes | Project URL. Read on the server only. |
-| `SUPABASE_ANON_KEY` | yes | The anon JWT or an `sb_publishable_…` key. An `sb_secret_…` key is refused at startup. |
-| `NEXT_PUBLIC_SITE_URL` | production | Canonical origin for metadata, the sitemap and JSON-LD. Falls back to `VERCEL_PROJECT_PRODUCTION_URL`, then `http://localhost:3000`. |
-
-Environment variables are checked the first time a request needs the database. A missing or wrong value produces a clear `EnvConfigError` in the logs, a 503 from `/api/health` and the error page for visitors. The build and static routes are not affected.
+The review behind each design decision is in [`docs/design-debate.md`](docs/design-debate.md).
 
 ---
 
-## Project layout
+## 1. Architecture and data flow
 
 ```
-supabase/
-  config.toml
-  migrations/
-    20260915000000_core_schema.sql       enums, tables, indexes, RLS, grants, RPCs
-    20260915000100_schedule_job_expiry.sql  pg_cron sweep (skipped where pg_cron is absent)
-db/tests/
-  00_supabase_bootstrap.sql              recreates Supabase roles on plain Postgres
-  10_schema.test.sql                     contract tests (run in one transaction, then rolled back)
-scripts/test-db.sh
+Browser ── /, /jobs/[slug] ─────────▶ Next.js (anon key, RLS) ──────────────┐
+Employer ─ /post-a-job ─▶ server action ─▶ create_job_posting (draft)       │
+                              └─▶ Stripe Checkout (price set on server) ─▶ Stripe
+Stripe ─── webhook ──▶ /api/stripe/webhook ─ verify signature + amount ─▶   │
+                         activate_paid_job ─▶ revalidate ─▶ confirmation email (Resend)
+Vercel Cron (daily) ─▶ /api/cron/digest   ─ Mondays; resumes unfinished runs ─▶ Resend
+Vercel Cron (daily) ─▶ /api/cron/maintenance ─▶ run_maintenance()           │
+Admin ── Basic auth ─▶ /admin (proxy.ts + per-action check, service role)   │
+Mail client ─ POST ──▶ /api/unsubscribe/[token] (RFC 8058 one-click)        │
+GitHub Actions (6h) ─▶ python -m agentjobs_ingest ─▶ upsert_ingested_jobs ──┤
+                                                                            ▼
+                                     Supabase Postgres (+ pg_cron every 15 min)
+```
+
+**Job lifecycle.**
+
+- **Paid posting:** `draft` → `pending_payment` → `active` → `expired`
+- **Abandoned or failed checkout:** `pending_payment` → `payment_expired`
+- **Admin moderation:** a job can move to `rejected`, and back to `active` when restored.
+
+**What a visitor sees.**
+
+- **Public visibility:** only jobs with `status = 'active'` and `expires_at > now()` are shown. This is enforced in the database.
+- **Featured jobs:** pinned to the top while `featured_until > now()`.
+
+**Guarantees.**
+
+- **Publishing only follows real payment.** A job goes live only after a signature-verified Stripe event whose pre-discount subtotal matches the price set on the server. If the webhook is late, the success page asks Stripe directly and publishes through the same code path, which is safe to run twice.
+- **Ingestion never loses listings to a bad fetch.** It updates rows keyed on `(source_name, external_id)`. It closes jobs missing from a feed only when that feed was fetched completely and cleanly. It never brings back a job an admin rejected.
+- **The weekly digest cannot double-send.** There is one run row per ISO week and one delivery row per subscriber. Each batch carries a deterministic idempotency key, so the daily cron can safely resume after a timeout.
+- **Clients never write to tables directly.** Browser-side writes go only through RPCs. Service-role code runs only on the server (enforced by `server-only`).
+
+---
+
+## 2. Repository layout
+
+```
 src/
   app/
-    (board)/page.tsx                     feed: search, category/workplace/tag filters, pagination
-    (board)/loading.tsx                  loading skeleton, scoped to the feed only (see Decisions)
-    jobs/[slug]/page.tsx                 job page: Markdown, JSON-LD JobPosting, ISR (5 min)
-    api/health/route.ts                  checks the app and the database for uptime monitors
-    actions.ts                           server action for the digest signup
-    layout.tsx, error.tsx, global-error.tsx, not-found.tsx
-    sitemap.ts, robots.ts, icon.svg, globals.css
-  components/                            UI components (server by default; client only where needed)
+    (board)/page.tsx, loading.tsx        feed: instant search, filters, pagination
+    jobs/[slug]/page.tsx                 job page (Markdown, JobPosting JSON-LD, ISR)
+    post-a-job/page.tsx, actions.ts      multi-step posting flow → Stripe Checkout
+    post-a-job/success/page.tsx          payment confirmation (with direct Stripe check)
+    admin/…                              stats, moderation, curated listings
+    unsubscribe/[token]/…                confirm-to-unsubscribe page
+    api/stripe/webhook                   Stripe events
+    api/cron/digest, api/cron/maintenance
+    api/unsubscribe/[token]              one-click unsubscribe
+    api/health                           checks the app and the database for uptime monitors
+    actions.ts                           digest signup
+  components/                            UI (post-job/, admin/, feed components)
   lib/
-    database.types.ts                    Supabase-generated shape (can be regenerated in place)
-    env.ts                               lazy, zod-validated server env
-    supabase/server.ts                   server-only Supabase client (public key, 8 s timeout)
-    jobs.ts                              data access layer; the only module that queries
-    search-params.ts                     turns untrusted URL params into typed filters
-    validation.ts                        zod schemas that match the database CHECK rules
-    format.ts, site.ts, types.ts
+    posting/  stripe/  email/  digest/  admin/  supabase/
+    env.ts (config checks per feature) · rate-limit.ts · jobs.ts · validation.ts
+  proxy.ts                               Basic-auth gate for /admin
+supabase/migrations/                     5 migrations (schema → posting/ingestion/digest → admin)
+db/tests/                                SQL contract tests (schema, operations, admin)
+ingestion/                               Python package, sources.yaml, pytest suite
+tests/unit/                              Vitest unit and integration tests
+tests/e2e/                               PostgREST shim, Stripe/Resend doubles, Playwright scenario
+scripts/test-db.sh, scripts/test-e2e.sh
+vercel.json                              scheduled jobs (Vercel Cron)
+.github/workflows/ci.yml, ingest.yml     CI and scheduled ingestion
 ```
 
 ---
 
-## Architecture decisions
+## 3. Local setup
 
-**Visibility is enforced in the database, not in the app.** A job is public when `status = 'active' and expires_at > now()`. The RLS policy applies this rule, and so does the `search_jobs` RPC. An expired listing disappears even if the expiry sweep has not run yet.
+**Requirements:** Node 22 (`.nvmrc`), Python 3.11 or newer, the PostgreSQL 15+ client (`psql`), and a Supabase project.
 
-**The lifecycle is an enum, not an `is_active` boolean.** The statuses are `draft → pending_payment → active → expired | rejected`. This keeps "paid but not yet published" separate from "expired". CHECK constraints make invalid states impossible to store:
+```bash
+nvm use
+npm ci
+cp .env.example .env.local
+```
 
-- an active job must have a valid publishing window
-- a `pending_payment` job must have a Stripe session
-- a featured job must have `featured_until`
+> 🔐 **Needs your credentials.** Fill in `.env.local` with your own keys. The table below says where each one comes from. Nothing in this repository contains real secrets.
 
-**Categories live in a reference table.** Jobs point to them with a foreign key, so filters and stored data cannot drift apart. Seven categories are seeded by the migration.
+| Variable | Where to get it | Needed for |
+| --- | --- | --- |
+| `SUPABASE_URL`, `SUPABASE_ANON_KEY` | Supabase → Project Settings → API | everything |
+| 🔐 `SUPABASE_SERVICE_ROLE_KEY` | same page (service_role / `sb_secret_…`) | posting, admin, digest, rate limits, ingestion |
+| 🔐 `STRIPE_SECRET_KEY` | Stripe → Developers → API keys | posting |
+| 🔐 `STRIPE_WEBHOOK_SECRET` | Stripe → Webhooks (or `stripe listen`) | posting |
+| 🔐 `RESEND_API_KEY` | Resend → API Keys | digest and confirmation emails |
+| `EMAIL_FROM`, `EMAIL_REPLY_TO` | an address on a domain you verified in Resend | email |
+| `POSTAL_ADDRESS` | your business mailing address (required by CAN-SPAM) | digest |
+| 🔐 `CRON_SECRET` | `openssl rand -hex 32` | scheduled jobs |
+| 🔐 `ADMIN_USERNAME`, `ADMIN_PASSWORD` | choose them (password: 12+ characters) | `/admin` |
+| `NEXT_PUBLIC_SITE_URL` | your public origin | canonical links and emails |
 
-**Anonymous users can only read public columns.** Supabase's default `GRANT ALL` is revoked. `anon` and `authenticated` get column-level `SELECT` on `jobs`, so these columns can never be read with the public key:
+When a variable is missing, only the feature that needs it is turned off, and the error message names the variable. The public board runs with just the Supabase URL and anon key.
 
-- `stripe_checkout_session_id`
-- `employer_id`
-- `source_name` and `external_id`
+### 3.1 Database
 
-`employers` and `subscribers` have RLS enabled and no client policies at all.
+> 🔐 **Needs access to your Supabase project.** Run these yourself:
 
-**Writes go through narrow RPCs:**
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase db push          # applies all migrations in supabase/migrations
+```
 
-- `subscribe_to_digest(email, source)` is a security-definer function that anyone can call. It normalises and validates the email. It returns the same response for new and existing addresses, so it cannot be used to check who is subscribed, and it never re-subscribes someone who opted out.
-- `activate_paid_job(session_id, featured, days)` can only be called by `service_role`. Calling it again with the same session is safe, because Stripe can deliver a webhook more than once. The Phase 2 webhook only needs to call this function.
-- `expire_jobs()` can only be called by `service_role`. pg_cron runs it every 15 minutes.
+The migrations enable `pg_cron` and schedule `run_maintenance()` every 15 minutes wherever the extension is available, which includes Supabase. If `pg_cron` was unavailable when you ran the migrations, enable it under Database → Extensions and re-run the `do $migration$ … $migration$` block from `20260916000100_posting_ingestion_digest.sql` in the SQL editor. The daily Vercel cron job also runs the same maintenance as a backstop.
 
-**Search uses Postgres full-text search.** A generated, weighted `tsvector` column ranks the title and tags (A), company (B), location (C) and description (D), with a GIN index. `websearch_to_tsquery` accepts user-style syntax. Queries that are blank or contain only stop words count as "no query". Partial indexes cover the feed, category, workplace and expiry lookups. GIN on `tags` covers tag filters. A partial unique index on `(source_name, external_id)` makes ingestion safe to re-run.
+### 3.2 Run the app
 
-**No new extensions.** Emails are stored lower-cased and checked with a CHECK constraint, so `citext` is not needed. `array_to_string` is not immutable, so a small immutable wrapper feeds the generated column.
+```bash
+npm run dev                    # http://localhost:3000
+```
 
-**Slugs are created in the database.** A trigger builds `title-at-company-<8 hex>` from the row id. Parts that produce an empty slug (for example non-Latin text) are dropped, with `job` as the final fallback.
+To test payments locally:
 
-**All data access is server-side.** The browser never talks to Supabase in Phase 1. The client uses the public key, has no session, and is shared within the server process. Each request has an 8-second timeout. The health probe turns off supabase-js retries so it reports the real current state.
+> 🔐 **Needs your Stripe account.**
 
-**Rendering:**
+```bash
+stripe login
+stripe listen --forward-to localhost:3000/api/stripe/webhook   # prints whsec_… → STRIPE_WEBHOOK_SECRET
+```
 
-- The feed is dynamic, because filters live in the URL.
-- Job pages use ISR (`revalidate = 300`, rendered on first request), and the webhook can revalidate a page immediately.
-- The loading skeleton is scoped to the `(board)` route group. At the root it would make every page stream, and then `notFound()` on a job page could only return a soft 404 (HTTP 200) instead of a real 404.
+Pay with card `4242 4242 4242 4242`.
 
-**UI principles:**
+### 3.3 Run ingestion
 
-- Every filter is a link, so filtered views can be shared, crawled and used without JavaScript.
-- Instant search updates `?q=` after a 300 ms pause and replaces the history entry. Its input is uncontrolled, so a late URL update never overwrites what the user is typing.
-- Employer logos use a plain `<img>`, so the Next image optimizer is never an open proxy. If a logo is missing or fails to load, the company's initials are shown instead.
-- In employer Markdown, raw HTML and images are dropped, `javascript:` links become plain text, and headings are moved down one level so each page keeps a single `<h1>`.
+```bash
+cd ingestion
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[test]"
+python -m agentjobs_ingest validate-config
+python -m agentjobs_ingest run --dry-run                       # no writes, prints a JSON summary
+```
+
+For a live run:
+
+> 🔐 **Needs your service-role key.**
+
+```bash
+SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… python -m agentjobs_ingest run
+```
+
+**Editing the source list.** Boards are listed in `ingestion/sources.yaml`.
+
+- **Adding a board:** add the provider and the board token from the company's careers URL.
+- **Checking one board:** `--dry-run --source ashby:<board>`.
+- **If a token is wrong:** the board is reported as `not_found`, and the run still succeeds unless you pass `--strict`.
+
+**Which roles get published.** Only roles that pass two checks:
+
+- the title is an engineering title
+- the posting shows enough agent/LLM signal (see `ingestion/agentjobs_ingest/classify.py`)
+
+A generic role at an AI company doesn't qualify on company boilerplate alone.
 
 ---
 
-## QA and Critic review log
+## 4. Tests
 
-Issues found during Phase 1 and fixed before delivery:
+| Command | What it covers |
+| --- | --- |
+| `npm test` | Vitest (92 tests): posting schema, pricing, Checkout parameters, Stripe fulfillment and webhook route (real signatures), digest batching and resume, email templates, Resend retries, admin/cron authentication, env checks, search and formatting |
+| `npm run test:ingest` | pytest (89 tests): Greenhouse/Lever/Ashby parsers (recorded-shape fixtures), pagination, retries, classifier, normalizer, pipeline safety rules, CLI, config, RPC client |
+| `npm run test:db` | SQL contract tests on real Postgres: schema, RLS, grants, every RPC and lifecycle transition. Set `RUN_INGEST_CONTRACT=1` to also check that Python payloads are accepted by the real RPC. |
+| `npm run test:e2e` | 16-step Playwright scenario (details below) |
+| `npm run check` | typecheck, lint, unit tests and build |
 
-1. **Default privileges leaked columns.** Supabase grants `ALL` to `anon`, which would have exposed billing columns. Fix: revoke, then grant column-level access. A regression test covers it.
-2. **`array_to_string` is `STABLE`,** so Postgres rejects it in a generated column. Fix: an immutable wrapper.
-3. **Tag validation missed `NULL` elements,** because `bool_and` ignores nulls. It also accepted trailing spaces and multi-dimensional arrays. Fix: explicit null, end-character and dimension checks.
-4. **Fallback slugs such as `at-xxxx`.** Non-Latin titles produced these. Fix: drop empty parts.
-5. **Stop-word-only search returned zero rows.** Fix: an empty `tsquery` now counts as no query.
-6. **Unbounded paging arguments.** Fix: `search_jobs` limits `limit` to 1–100 and `offset` to 0–10,000.
-7. **Soft 404s.** The root `loading.tsx` made job pages return HTTP 200 on `notFound()`. Fix: scope the loading skeleton to the feed route group.
-8. **Search box race.** "Clear filters" left stale text in the search box, and a controlled input could lose keystrokes. Fix: an uncontrolled input that re-syncs from the URL when it is not focused.
-9. **Slow health probe.** Automatic retries made it take about 7 s against a database that refused connections. Fix: a single attempt, which now takes about 70 ms.
-10. **Unsafe Markdown output.** Raw HTML showed up as literal text, and blocked `javascript:` links still rendered as `href=""`. Fix: `skipHtml`, and links without a URL render as text.
-11. **Impure render.** `Date.now()` was called during render (flagged by react-hooks/purity). Fix: the data layer now returns a `fetchedAt` timestamp.
-12. **Mobile layout.** The email field collapsed in the stacked layout, and the header wrapped. Fix: responsive sizing adjustments.
+The two database suites need `DATABASE_ADMIN_URL=postgres://postgres:postgres@localhost:5432/postgres`. They create and drop their own throwaway databases.
 
-Verification run:
+**What the end-to-end suite runs against.** A production build, all migrations on real Postgres (through a small PostgREST-compatible shim that enforces RLS), and local Stripe and Resend test doubles. It covers:
 
-- **Schema tests on PostgreSQL 16.** 88 assertions cover constraints, triggers, RLS, column grants, RPC permissions, webhook idempotency, the expiry sweep and search ranking and filters. Mutation checks confirmed the suite catches a removed revoke, a loosened RLS policy and a changed conflict rule.
-- **Index usage on 50k rows.** `EXPLAIN` shows the GIN index is used for text search and the partial feed and category indexes for listing queries.
-- **App checks.** `tsc` (strict, `noUncheckedIndexedAccess`), ESLint and `next build` all pass with no database credentials.
-- **Browser tests (Playwright).** These ran against an HTTP stub that imitates Supabase's REST API (PostgREST), so they did not use a real Supabase instance. They covered:
-  - instant search, Escape to clear, and combined filters
-  - "Clear filters" resetting the search box
-  - digest signup: invalid email, backend failure and success, with the email normalised
-  - logo fallback
-  - no horizontal overflow on mobile
-  - dark mode
-  - no XSS through the Markdown description or the JSON-LD block
-- **Failure modes.**
-  - Missing env: 503 from `/api/health`, the error page for visitors.
-  - A service-role key used as the public key: refused.
-  - Database unreachable: 503 in about 70 ms.
-  - Unknown or malformed slug: a real 404.
+- the posting form, webhook forgery and underpaid-amount checks, and publishing
+- the late-webhook fallback, cancel and restore of a draft, and expired checkouts
+- featured pinning and search
+- digest signup, sending, one-click unsubscribe and the confirmation page
+- cron authentication, admin moderation, curated listings, health checks and the sitemap
+
+It needs Chromium: run `npx playwright install chromium` once.
 
 ---
 
-## Next phases
+## 5. Deploying to Vercel
 
-- **Phase 2: employer self-serve posting.** A multi-step form, Stripe Checkout ($149 listing, $99 featured add-on), and a webhook that calls `activate_paid_job` and then `revalidatePath`.
-- **Phase 3: ingestion.** A Python script that upserts on `(source_name, external_id)` using the service role.
-- **Digest delivery.** A weekly send to `subscribers where unsubscribed_at is null`, with an unsubscribe link built from `unsubscribe_token`.
+1. **Import the repository.** Import the whole repo; Vercel detects Next.js at the root. The `ingestion/`, `supabase/`, `db/`, `tests/` and `docs/` folders are never bundled.
+2. **Add environment variables.**
+   > 🔐 **Needs your secrets.** Add every variable from section 3 under Project → Settings → Environment Variables.
 
+   Set `NEXT_PUBLIC_SITE_URL` for Production only. Preview deployments then use their own URL for Stripe redirects.
+3. **Set up the Stripe webhook.**
+   > 🔐 **Needs your Stripe account.** In Stripe → Webhooks, add `https://<domain>/api/stripe/webhook` with these events:
+   > - `checkout.session.completed`
+   > - `checkout.session.async_payment_succeeded`
+   > - `checkout.session.async_payment_failed`
+   > - `checkout.session.expired`
+
+   Copy its signing secret into `STRIPE_WEBHOOK_SECRET`. Use a separate endpoint and secret for test mode.
+4. **Verify the sending domain.**
+   > 🔐 **Needs access to your DNS.** Verify it in Resend (SPF/DKIM) before the first digest goes out.
+5. **Scheduled jobs.** `vercel.json` sets up two daily jobs:
+   - digest at 14:00 UTC; it starts on Mondays and resumes any unfinished run
+   - maintenance at 03:30 UTC
+
+   Vercel sends `Authorization: Bearer $CRON_SECRET` automatically once `CRON_SECRET` is set. To send the digest immediately:
+
+   ```bash
+   curl -H "Authorization: Bearer $CRON_SECRET" "https://<domain>/api/cron/digest?force=1"
+   ```
+6. **After deploying.**
+   - `GET /api/health` should return `{"status":"ok"}`.
+   - `/admin` should ask for credentials.
+
+### GitHub Actions
+
+> 🔐 **Needs write access to the repository settings.**
+
+- **Workflow files:** `.github/workflows/ci.yml` (lint, tests, build, database and end-to-end suites) and `ingest.yml` (every 6 hours). If they are not in the repository yet, copy them into `.github/workflows/`.
+- **Secrets:** add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` under Settings → Secrets and variables → Actions. Ingestion needs them.
+- **First run:** run **Ingest jobs** manually with `dry_run: true`, check the summary, then run it for real so the board isn't empty at launch.
+
+---
+
+## 6. Operations
+
+**Admin console (`/admin`).** Shows live, featured, paid and subscriber counts, and the status of the last digest. You can filter jobs by status, search them, and:
+
+- reject, restore, feature, unfeature, or extend a listing by 30 days
+- publish a curated listing without payment
+
+**Rate limits.** Stored in Postgres with hashed IP addresses:
+
+| Action | Limit per IP |
+| --- | --- |
+| Job postings | 10 per hour |
+| Digest signups | 5 per hour |
+| Unsubscribe confirmations | 30 per hour |
+
+If the rate limiter itself fails, requests are allowed through rather than blocked.
+
+**Refunds and disputes.** Handle them in Stripe, then reject the listing in `/admin`.
+
+**Changing prices.** Edit `src/lib/posting/pricing.ts`. The webhook checks payments against these same values.

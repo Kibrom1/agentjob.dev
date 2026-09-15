@@ -1,0 +1,48 @@
+# Public job boards to aggregate. Only roles that pass the relevance filter
+# (engineering title + agent/LLM signal) are published.
+#
+# provider: greenhouse | lever | ashby
+# board:    the board token from the company's careers URL
+#           greenhouse → boards.greenhouse.io/<board>
+#           lever      → jobs.lever.co/<board>
+#           ashby      → jobs.ashbyhq.com/<board>
+#
+# Validate edits with:  python -m agentjobs_ingest validate-config
+# Check a board with:   python -m agentjobs_ingest run --dry-run --source ashby:<board>
+sources:
+  - provider: greenhouse
+    board: anthropic
+    company: Anthropic
+    company_url: https://www.anthropic.com
+  - provider: greenhouse
+    board: scaleai
+    company: Scale AI
+    company_url: https://scale.com
+  - provider: greenhouse
+    board: databricks
+    company: Databricks
+    company_url: https://www.databricks.com
+  - provider: greenhouse
+    board: vercel
+    company: Vercel
+    company_url: https://vercel.com
+  - provider: ashby
+    board: openai
+    company: OpenAI
+    company_url: https://openai.com
+  - provider: ashby
+    board: langchain
+    company: LangChain
+    company_url: https://www.langchain.com
+  - provider: ashby
+    board: cohere
+    company: Cohere
+    company_url: https://cohere.com
+  - provider: ashby
+    board: llamaindex
+    company: LlamaIndex
+    company_url: https://www.llamaindex.ai
+  - provider: lever
+    board: mistral
+    company: Mistral AI
+    company_url: https://mistral.ai

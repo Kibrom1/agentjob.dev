@@ -39,3 +39,15 @@ export const siteConfig = {
 export function absoluteUrl(path: string): string {
   return new URL(path, siteConfig.url).toString();
 }
+
+/**
+ * Origin for links that must return to *this* deployment (Stripe redirect
+ * URLs). Preview deployments use their own URL so a checkout started on a
+ * preview never lands on production.
+ */
+export function deploymentOrigin(): string {
+  if (process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return siteConfig.url.origin;
+}

@@ -1,0 +1,40 @@
+[
+  {
+    "id": "b5a1c7d2-0000-4000-8000-000000000001",
+    "text": "Inference Engineer (vLLM)",
+    "hostedUrl": "https://jobs.lever.co/acme/b5a1c7d2-0000-4000-8000-000000000001",
+    "applyUrl": "https://jobs.lever.co/acme/b5a1c7d2-0000-4000-8000-000000000001/apply",
+    "createdAt": 1788000000000,
+    "workplaceType": "remote",
+    "categories": {
+      "commitment": "Contract",
+      "location": "Paris, France",
+      "team": "Inference"
+    },
+    "description": "<p>Serve open-weight LLMs at scale with vLLM, CUDA kernels and quantization. You will own LLM inference for our agents platform.</p>",
+    "lists": [
+      {
+        "text": "What you'll do",
+        "content": "<li>Optimise GPU throughput</li><li>Benchmark llama.cpp and Ollama</li>"
+      }
+    ],
+    "additional": "<p>Salary depends on experience.</p>",
+    "salaryRange": {
+      "currency": "EUR",
+      "interval": "per-year-salary",
+      "min": 150000,
+      "max": 110000
+    }
+  },
+  {
+    "id": "b5a1c7d2-0000-4000-8000-000000000002",
+    "text": "Recruiter, Technical",
+    "hostedUrl": "https://jobs.lever.co/acme/2",
+    "createdAt": 1788000000000,
+    "categories": {
+      "commitment": "Full-time",
+      "location": "Paris"
+    },
+    "description": "<p>Hire LLM agents engineers.</p>"
+  }
+]

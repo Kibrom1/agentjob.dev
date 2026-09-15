@@ -39,6 +39,72 @@ export type Database = {
         };
         Relationships: [];
       };
+      digest_deliveries: {
+        Row: {
+          provider_message_id: string | null;
+          run_id: string;
+          sent_at: string;
+          subscriber_id: string;
+        };
+        Insert: {
+          provider_message_id?: string | null;
+          run_id: string;
+          sent_at?: string;
+          subscriber_id: string;
+        };
+        Update: {
+          provider_message_id?: string | null;
+          run_id?: string;
+          sent_at?: string;
+          subscriber_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "digest_deliveries_run_id_fkey";
+            columns: ["run_id"];
+            isOneToOne: false;
+            referencedRelation: "digest_runs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "digest_deliveries_subscriber_id_fkey";
+            columns: ["subscriber_id"];
+            isOneToOne: false;
+            referencedRelation: "subscribers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      digest_runs: {
+        Row: {
+          completed_at: string | null;
+          id: string;
+          job_count: number;
+          period_start: string;
+          sent_count: number;
+          started_at: string;
+          status: string;
+        };
+        Insert: {
+          completed_at?: string | null;
+          id?: string;
+          job_count?: number;
+          period_start: string;
+          sent_count?: number;
+          started_at?: string;
+          status?: string;
+        };
+        Update: {
+          completed_at?: string | null;
+          id?: string;
+          job_count?: number;
+          period_start?: string;
+          sent_count?: number;
+          started_at?: string;
+          status?: string;
+        };
+        Relationships: [];
+      };
       employers: {
         Row: {
           company_name: string;
@@ -183,6 +249,24 @@ export type Database = {
           },
         ];
       };
+      rate_limits: {
+        Row: {
+          hits: number;
+          key: string;
+          window_start: string;
+        };
+        Insert: {
+          hits?: number;
+          key: string;
+          window_start: string;
+        };
+        Update: {
+          hits?: number;
+          key?: string;
+          window_start?: string;
+        };
+        Relationships: [];
+      };
       subscribers: {
         Row: {
           created_at: string;
@@ -223,9 +307,41 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["jobs"]["Row"];
       };
+      attach_checkout_session: {
+        Args: { p_job_id: string; p_session_id: string };
+        Returns: undefined;
+      };
+      begin_digest_run: {
+        Args: { p_period_start: string };
+        Returns: Database["public"]["Tables"]["digest_runs"]["Row"];
+      };
+      consume_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number };
+        Returns: boolean;
+      };
+      create_job_posting: {
+        Args: { p_employer: Json; p_job: Json };
+        Returns: string;
+      };
+      admin_create_job: {
+        Args: { p_days?: number; p_featured?: boolean; p_job: Json };
+        Returns: Database["public"]["Tables"]["jobs"]["Row"];
+      };
+      admin_stats: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
+      };
+      admin_update_job: {
+        Args: { p_action: string; p_days?: number; p_job_id: string };
+        Returns: Database["public"]["Tables"]["jobs"]["Row"];
+      };
       are_valid_tags: {
         Args: { p_tags: string[] };
         Returns: boolean;
+      };
+      finish_digest_run: {
+        Args: { p_job_count: number; p_run_id: string; p_status: string };
+        Returns: undefined;
       };
       expire_jobs: {
         Args: Record<PropertyKey, never>;
@@ -241,6 +357,26 @@ export type Database = {
       is_valid_slug: {
         Args: { p_slug: string };
         Returns: boolean;
+      };
+      mark_checkout_expired: {
+        Args: { p_session_id: string };
+        Returns: number;
+      };
+      next_digest_recipients: {
+        Args: { p_limit?: number; p_run_id: string };
+        Returns: {
+          email: string;
+          subscriber_id: string;
+          unsubscribe_token: string;
+        }[];
+      };
+      record_digest_deliveries: {
+        Args: { p_deliveries: Json; p_run_id: string };
+        Returns: number;
+      };
+      run_maintenance: {
+        Args: Record<PropertyKey, never>;
+        Returns: Json;
       };
       search_jobs: {
         Args: {
@@ -282,10 +418,18 @@ export type Database = {
         Args: { p_tags: string[] };
         Returns: string;
       };
+      unsubscribe_from_digest: {
+        Args: { p_token: string };
+        Returns: boolean;
+      };
+      upsert_ingested_jobs: {
+        Args: { p_close_missing?: boolean; p_jobs: Json; p_source_name: string };
+        Returns: Json;
+      };
     };
     Enums: {
       job_source: "employer" | "ingested" | "admin";
-      job_status: "draft" | "pending_payment" | "active" | "expired" | "rejected";
+      job_status: "draft" | "pending_payment" | "payment_expired" | "active" | "expired" | "rejected";
       job_type: "full_time" | "part_time" | "contract" | "internship";
       workplace_type: "remote" | "hybrid" | "onsite";
     };
@@ -307,7 +451,7 @@ export const Constants = {
   public: {
     Enums: {
       job_source: ["employer", "ingested", "admin"],
-      job_status: ["draft", "pending_payment", "active", "expired", "rejected"],
+      job_status: ["draft", "pending_payment", "payment_expired", "active", "expired", "rejected"],
       job_type: ["full_time", "part_time", "contract", "internship"],
       workplace_type: ["remote", "hybrid", "onsite"],
     },

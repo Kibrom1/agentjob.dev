@@ -1,0 +1,51 @@
+{
+  "jobs": [
+    {
+      "id": 4011,
+      "title": "Senior Software Engineer, Agent Orchestration",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4011",
+      "location": {
+        "name": "San Francisco, CA | Hybrid"
+      },
+      "updated_at": "2026-09-10T12:00:00-04:00",
+      "first_published": "2026-09-01T09:00:00-04:00",
+      "departments": [
+        {
+          "id": 1,
+          "name": "Agents"
+        }
+      ],
+      "content": "&lt;h2&gt;About the role&lt;/h2&gt;&lt;p&gt;You will build &lt;strong&gt;multi-agent&lt;/strong&gt; systems with LangGraph and the Model Context Protocol (MCP).\nOur agents plan, call tools via function calling and run evals on every release.&lt;/p&gt;\n&lt;ul&gt;&lt;li&gt;5+ years Python&lt;/li&gt;&lt;li&gt;Experience with LLMs and RAG pipelines&lt;/li&gt;&lt;/ul&gt;&lt;img src=&quot;https://tracker.example/p.gif&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"
+    },
+    {
+      "id": 4012,
+      "title": "Software Engineer, Payments",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4012",
+      "location": {
+        "name": "Remote - US"
+      },
+      "updated_at": "2026-09-09T12:00:00Z",
+      "departments": [],
+      "content": "&lt;p&gt;We build large language models. As a payments engineer you will own billing systems, invoicing and ledgers using Java and Postgres.&lt;/p&gt;"
+    },
+    {
+      "id": 4013,
+      "title": "Account Executive, AI Agents",
+      "absolute_url": "https://boards.greenhouse.io/acme/jobs/4013",
+      "location": {
+        "name": "New York"
+      },
+      "updated_at": "2026-09-09T12:00:00Z",
+      "content": "&lt;h2&gt;About the role&lt;/h2&gt;&lt;p&gt;You will build &lt;strong&gt;multi-agent&lt;/strong&gt; systems with LangGraph and the Model Context Protocol (MCP).\nOur agents plan, call tools via function calling and run evals on every release.&lt;/p&gt;\n&lt;ul&gt;&lt;li&gt;5+ years Python&lt;/li&gt;&lt;li&gt;Experience with LLMs and RAG pipelines&lt;/li&gt;&lt;/ul&gt;&lt;img src=&quot;https://tracker.example/p.gif&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"
+    },
+    {
+      "id": null,
+      "title": "Broken",
+      "absolute_url": "https://x.test"
+    },
+    "not-an-object"
+  ],
+  "meta": {
+    "total": 5
+  }
+}

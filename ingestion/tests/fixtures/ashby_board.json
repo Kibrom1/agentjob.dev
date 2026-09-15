@@ -1,0 +1,56 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "0f0e0d0c-0000-4000-8000-00000000000a",
+      "title": "Applied AI Engineer",
+      "department": "Product",
+      "team": "Retrieval",
+      "employmentType": "FullTime",
+      "location": "London, UK",
+      "secondaryLocations": [],
+      "publishedAt": "2026-09-05T10:00:00.000+00:00",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": null,
+      "jobUrl": "https://jobs.ashbyhq.com/acme/0f0e0d0c-0000-4000-8000-00000000000a",
+      "applyUrl": "https://jobs.ashbyhq.com/acme/0f0e0d0c-0000-4000-8000-00000000000a/application",
+      "descriptionHtml": "<p>Build retrieval-augmented generation (RAG) and long-term memory for our LLM agents. Work on embeddings, pgvector and evals.</p>",
+      "compensation": {
+        "compensationTierSummary": "\u00a3120K \u2013 \u00a3160K",
+        "summaryComponents": [
+          {
+            "compensationType": "EquityPercentage",
+            "interval": "NONE",
+            "minValue": 0.01,
+            "maxValue": 0.05
+          },
+          {
+            "compensationType": "Salary",
+            "interval": "1 YEAR",
+            "currencyCode": "GBP",
+            "minValue": 120000,
+            "maxValue": 160000
+          }
+        ]
+      }
+    },
+    {
+      "id": "0f0e0d0c-0000-4000-8000-00000000000b",
+      "title": "Agent Tooling Engineer",
+      "isListed": false,
+      "jobUrl": "https://jobs.ashbyhq.com/acme/b",
+      "descriptionHtml": "<p>Unlisted role</p>"
+    },
+    {
+      "id": "0f0e0d0c-0000-4000-8000-00000000000c",
+      "title": "Founding Engineer, MCP Integrations",
+      "employmentType": "FullTime",
+      "location": "",
+      "isListed": true,
+      "workplaceType": "Hybrid",
+      "jobUrl": "https://jobs.ashbyhq.com/acme/c",
+      "descriptionHtml": "<p>short</p>"
+    }
+  ]
+}

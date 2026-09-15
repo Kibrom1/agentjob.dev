@@ -17,6 +17,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "hourly",
       priority: 1,
     },
+    {
+      url: absoluteUrl("/post-a-job"),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
     ...jobs.map((job) => ({
       url: absoluteUrl(`/jobs/${job.slug}`),
       lastModified: new Date(job.published_at),
