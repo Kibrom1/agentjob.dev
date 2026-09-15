@@ -169,3 +169,4 @@ Verification run:
 - **Phase 2: employer self-serve posting.** A multi-step form, Stripe Checkout ($149 listing, $99 featured add-on), and a webhook that calls `activate_paid_job` and then `revalidatePath`.
 - **Phase 3: ingestion.** A Python script that upserts on `(source_name, external_id)` using the service role.
 - **Digest delivery.** A weekly send to `subscribers where unsubscribed_at is null`, with an unsubscribe link built from `unsubscribe_token`.
+
