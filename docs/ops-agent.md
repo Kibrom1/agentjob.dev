@@ -118,3 +118,15 @@ tags, absolute URL. This is what the agent reads to know what's new.
 - **Admin actions themselves** (reject/restore/feature) stay a human
   clicking a button in `/admin`, on purpose — see the Risk Assessor note
   above.
+
+---
+
+## Operating the scheduled task
+
+The task is named **"AgentJobs.dev Ops Agent"** (id `trig_012kQ7rrduKhjgZa5ret4cCa`),
+runs daily at 13:00 UTC, and notifies in-app only (no push/email) — ask
+Claude to change either. It assumes the production URL is `https://agentjobs.dev`;
+once deployed, ask Claude to update the task's prompt with the real URL (if
+different) and the `CRON_SECRET` value from Vercel so it can pull the full
+report instead of just the public health/recent-jobs endpoints. Marketing
+drafts it writes land in the project doc `claude/marketing-drafts.md`.
