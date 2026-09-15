@@ -1,0 +1,6 @@
+# Minimal Supabase CLI config. `supabase link --project-ref <ref>` then
+# `supabase db push` applies everything in ./migrations.
+project_id = "agentjobs"
+
+[db]
+major_version = 17
