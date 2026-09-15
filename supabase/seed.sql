@@ -1,0 +1,93 @@
+-- AgentJobs.dev local seed data
+
+insert into public.employers (id, company_name, email, website_url)
+values
+  ('a0000000-0000-0000-0000-000000000001', 'Cortex Dynamics', 'talent@cortexdynamics.ai', 'https://cortexdynamics.ai'),
+  ('a0000000-0000-0000-0000-000000000002', 'AgentForge Systems', 'careers@agentforge.dev', 'https://agentforge.dev'),
+  ('a0000000-0000-0000-0000-000000000003', 'OmniContext', 'recruiting@omnicontext.io', 'https://omnicontext.io')
+on conflict do nothing;
+
+insert into public.jobs (
+  employer_id,
+  status,
+  source,
+  title,
+  company,
+  location,
+  workplace_type,
+  job_type,
+  category_slug,
+  tags,
+  description,
+  apply_url,
+  salary_min,
+  salary_max,
+  salary_currency,
+  is_featured,
+  featured_until,
+  published_at,
+  expires_at
+) values
+(
+  'a0000000-0000-0000-0000-000000000001',
+  'active',
+  'employer',
+  'Lead Multi-Agent Systems Architect',
+  'Cortex Dynamics',
+  'San Francisco, CA / Remote',
+  'hybrid',
+  'full_time',
+  'multi-agent-systems',
+  array['Multi-Agent', 'LangGraph', 'Python', 'Distributed Systems'],
+  'We are looking for a Lead Multi-Agent Systems Architect to design and implement complex autonomous multi-agent coordination protocols. You will architect consensus mechanisms, task-decomposition engines, and inter-agent communication protocols operating in high-concurrency environments.',
+  'https://cortexdynamics.ai/jobs/lead-architect',
+  210000,
+  270000,
+  'USD',
+  true,
+  now() + interval '30 days',
+  now() - interval '1 day',
+  now() + interval '30 days'
+),
+(
+  'a0000000-0000-0000-0000-000000000002',
+  'active',
+  'employer',
+  'Senior Tool-Use & MCP Backend Engineer',
+  'AgentForge Systems',
+  'Remote (Worldwide)',
+  'remote',
+  'full_time',
+  'tool-use-backends',
+  array['MCP', 'Docker', 'TypeScript', 'Security', 'Tool Use'],
+  'AgentForge builds isolated execution sandboxes and Model Context Protocol (MCP) server fleets for production AI agents. We are seeking a Senior Backend Engineer to build sub-second sandbox provisioning, secure tool execution runtimes, and fine-grained capability token verification.',
+  'https://agentforge.dev/careers/mcp-backend',
+  180000,
+  230000,
+  'USD',
+  false,
+  null,
+  now() - interval '2 days',
+  now() + interval '30 days'
+),
+(
+  'a0000000-0000-0000-0000-000000000003',
+  'active',
+  'employer',
+  'Retrieval & Long-Term Memory Specialist',
+  'OmniContext',
+  'New York, NY / Remote',
+  'remote',
+  'full_time',
+  'retrieval-memory',
+  array['RAG', 'Vector Search', 'pgvector', 'Memory', 'Embeddings'],
+  'Join OmniContext to build persistent semantic memory architectures for stateful autonomous agents. You will optimize dense and sparse retrieval, hybrid indexing, graph-augmented memory graphs, and adaptive context compaction techniques for million-token sessions.',
+  'https://omnicontext.io/jobs/memory-specialist',
+  175000,
+  225000,
+  'USD',
+  false,
+  null,
+  now() - interval '3 days',
+  now() + interval '30 days'
+);

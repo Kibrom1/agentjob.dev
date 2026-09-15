@@ -1,6 +1,33 @@
-# Minimal Supabase CLI config. `supabase link --project-ref <ref>` then
-# `supabase db push` applies everything in ./migrations.
+# Supabase CLI config for local development
 project_id = "agentjobs"
 
+[api]
+enabled = true
+port = 54331
+
 [db]
+port = 54332
+shadow_port = 54330
 major_version = 17
+
+[studio]
+enabled = true
+port = 54333
+
+[inbucket]
+enabled = false
+
+[storage]
+enabled = false
+
+[auth]
+enabled = true
+port = 54336
+
+[analytics]
+enabled = false
+
+[realtime]
+enabled = false
+
+
