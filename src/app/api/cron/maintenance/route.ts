@@ -1,4 +1,4 @@
-import { isAuthorizedCron } from "@/lib/cron-auth";
+import { requireCronAuth } from "@/lib/cron-auth";
 import { EnvConfigError } from "@/lib/env";
 import { getAdminDbClient } from "@/lib/supabase/admin";
 
@@ -8,11 +8,11 @@ const NO_STORE = { "Cache-Control": "no-store" } as const;
 
 /** Daily backstop for the pg_cron maintenance job. */
 export async function GET(request: Request) {
-  try {
-    if (!isAuthorizedCron(request)) {
-      return Response.json({ error: "Unauthorized" }, { status: 401, headers: NO_STORE });
-    }
+  // Auth runs first and in isolation — see requireCronAuth.
+  const unauthorized = requireCronAuth(request);
+  if (unauthorized) return unauthorized;
 
+  try {
     const { data, error } = await getAdminDbClient().rpc("run_maintenance");
     if (error) {
       console.error("[cron:maintenance] rpc failed", error);

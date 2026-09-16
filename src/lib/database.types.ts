@@ -448,6 +448,7 @@ export type Database = {
           p_category?: string;
           p_limit?: number;
           p_offset?: number;
+          p_published_after?: string;
           p_query?: string;
           p_tag?: string;
           p_workplace?: Database["public"]["Enums"]["workplace_type"];

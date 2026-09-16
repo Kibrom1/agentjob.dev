@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { constantTimeEqual, isAuthorizedAdmin, parseBasicAuth, readAdminConfig } from "@/lib/admin/auth";
 import { toIlikePattern } from "@/lib/admin/jobs";
-import { isAuthorizedCron } from "@/lib/cron-auth";
+import { isAuthorizedCron, requireCronAuth } from "@/lib/cron-auth";
 import { clientAddress, rateLimitKey } from "@/lib/request-meta";
 
 vi.mock("@/lib/supabase/admin", () => ({ getAdminDbClient: vi.fn() }));
@@ -55,6 +55,34 @@ describe("cron auth", () => {
   it("refuses to run with a weak or missing secret", () => {
     vi.stubEnv("CRON_SECRET", "short");
     expect(() => isAuthorizedCron(new Request("https://x.dev"))).toThrow(/CRON_SECRET/);
+  });
+});
+
+describe("requireCronAuth", () => {
+  it("returns null (proceed) for a correctly authenticated request", () => {
+    vi.stubEnv("CRON_SECRET", "0123456789abcdef-secret");
+    const request = new Request("https://x.dev/api/cron/digest", {
+      headers: { authorization: "Bearer 0123456789abcdef-secret" },
+    });
+    expect(requireCronAuth(request)).toBeNull();
+  });
+
+  it("returns a generic 401 for a wrong/missing bearer token", async () => {
+    vi.stubEnv("CRON_SECRET", "0123456789abcdef-secret");
+    const response = requireCronAuth(new Request("https://x.dev/api/cron/digest"));
+    expect(response).not.toBeNull();
+    expect(response?.status).toBe(401);
+    expect(await response?.json()).toEqual({ error: "Unauthorized" });
+  });
+
+  it("returns a generic 401 — never the env-var detail — when CRON_SECRET is unset/misconfigured", async () => {
+    vi.stubEnv("CRON_SECRET", "");
+    const response = requireCronAuth(new Request("https://x.dev/api/cron/digest"));
+    expect(response).not.toBeNull();
+    expect(response?.status).toBe(401);
+    const body = await response?.json();
+    expect(body).toEqual({ error: "Unauthorized" });
+    expect(JSON.stringify(body)).not.toMatch(/CRON_SECRET/);
   });
 });
 
