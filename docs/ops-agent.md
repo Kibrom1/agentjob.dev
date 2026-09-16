@@ -1,6 +1,6 @@
 # The Ops Agent
 
-AgentJobs.dev runs itself day to day — jobs publish on payment, expiry and
+AgentJob.dev runs itself day to day — jobs publish on payment, expiry and
 digests run on their own schedule. Nobody was watching whether any of that
 was actually still working, whether the board looked healthy to a visitor,
 or whether new listings were worth telling anyone about. This is the design
@@ -90,7 +90,7 @@ against a stats fixture rather than through a live database:
 (default 2, capped at 14) and shaped for drafting a post — title, company,
 tags, absolute URL. This is what the agent reads to know what's new.
 
-**The scheduled task ("AgentJobs.dev Ops Agent").** Runs daily. Each run:
+**The scheduled task ("AgentJob.dev Ops Agent").** Runs daily. Each run:
 
 1. Checks `/api/health`. Not reachable yet → reports that plainly and stops;
    this is expected until the site is deployed, not a failure.
@@ -123,9 +123,9 @@ tags, absolute URL. This is what the agent reads to know what's new.
 
 ## Operating the scheduled task
 
-The task is named **"AgentJobs.dev Ops Agent"** (id `trig_012kQ7rrduKhjgZa5ret4cCa`),
+The task is named **"AgentJob.dev Ops Agent"** (id `trig_012kQ7rrduKhjgZa5ret4cCa`),
 runs daily at 13:00 UTC, and notifies in-app only (no push/email) — ask
-Claude to change either. It assumes the production URL is `https://agentjobs.dev`;
+Claude to change either. It assumes the production URL is `https://agentjob.dev`;
 once deployed, ask Claude to update the task's prompt with the real URL (if
 different) and the `CRON_SECRET` value from Vercel so it can pull the full
 report instead of just the public health/recent-jobs endpoints. Marketing

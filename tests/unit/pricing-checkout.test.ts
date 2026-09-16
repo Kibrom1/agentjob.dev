@@ -25,7 +25,7 @@ describe("buildCheckoutParams", () => {
     jobTitle: "Agent Engineer",
     company: "Orbit",
     customerEmail: "a@orbit.example",
-    origin: "https://agentjobs.dev",
+    origin: "https://agentjob.dev",
   };
 
   it("charges the listing only for the standard plan", () => {
@@ -37,8 +37,8 @@ describe("buildCheckoutParams", () => {
     expect(params.payment_intent_data?.metadata).toEqual(params.metadata);
     expect(params.client_reference_id).toBe(request.jobId);
     expect(params.expires_at).toBe(1000 + CHECKOUT_TTL_SECONDS);
-    expect(params.success_url).toBe("https://agentjobs.dev/post-a-job/success?session_id={CHECKOUT_SESSION_ID}");
-    expect(params.cancel_url).toBe("https://agentjobs.dev/post-a-job?canceled=1");
+    expect(params.success_url).toBe("https://agentjob.dev/post-a-job/success?session_id={CHECKOUT_SESSION_ID}");
+    expect(params.cancel_url).toBe("https://agentjob.dev/post-a-job?canceled=1");
   });
 
   it("adds the featured line item", () => {

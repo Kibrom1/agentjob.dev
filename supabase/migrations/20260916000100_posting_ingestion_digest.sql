@@ -1,5 +1,5 @@
 -- =============================================================================
--- AgentJobs.dev — employer posting, rate limiting, ingestion, weekly digest
+-- AgentJob.dev — employer posting, rate limiting, ingestion, weekly digest
 --
 -- Every function here except unsubscribe_from_digest() is callable only by
 -- service_role (the Next.js server and the ingestion runner). Supabase grants

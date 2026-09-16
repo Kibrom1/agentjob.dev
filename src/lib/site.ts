@@ -26,8 +26,8 @@ function resolveSiteUrl(): URL {
 }
 
 export const siteConfig = {
-  name: "AgentJobs",
-  domain: "agentjobs.dev",
+  name: "AgentJob",
+  domain: "agentjob.dev",
   tagline: "Jobs for engineers who build AI agents",
   description:
     "Hand-picked roles for AI agent and multi-agent systems engineers: orchestration, tool-use backends, local LLM infrastructure, evals and more.",

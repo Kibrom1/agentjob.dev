@@ -79,13 +79,13 @@ export function digestEmail(input: DigestEmailInput): OutboundEmail {
 
   const html =
     WRAPPER_START +
-    '<p style="margin:0;font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;color:#047857;text-transform:uppercase">AgentJobs weekly</p>' +
+    '<p style="margin:0;font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;color:#047857;text-transform:uppercase">AgentJob weekly</p>' +
     `<h1 style="margin:6px 0 4px;font-size:22px">${escapeHtml(subject)}</h1>` +
     `<p style="margin:0 0 12px;color:#52525b;font-size:14px">New roles for engineers building AI agents · ${escapeHtml(input.weekLabel)}</p>` +
     `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${htmlItems}</table>` +
     `<p style="margin:20px 0 0"><a href="${escapeHtml(browseUrl)}" style="display:inline-block;background:#18181b;color:#fff;border-radius:8px;padding:10px 16px;font-size:14px;text-decoration:none">Browse all jobs</a></p>` +
     '<hr style="border:none;border-top:1px solid #e4e4e7;margin:24px 0 12px">' +
-    '<p style="margin:0;font-size:12px;color:#71717a">You are receiving this because you subscribed at agentjobs.dev. ' +
+    '<p style="margin:0;font-size:12px;color:#71717a">You are receiving this because you subscribed at agentjob.dev. ' +
     `<a href="${escapeHtml(input.unsubscribePageUrl)}" style="color:#71717a">Unsubscribe</a></p>` +
     `<p style="margin:6px 0 0;font-size:12px;color:#a1a1aa">${escapeHtml(input.postalAddress)}</p>` +
     WRAPPER_END;
@@ -131,13 +131,13 @@ export function postingConfirmationEmail(input: PostingConfirmationInput): Outbo
   const html =
     WRAPPER_START +
     `<h1 style="margin:0 0 8px;font-size:20px">${escapeHtml(subject)}</h1>` +
-    `<p style="margin:0 0 16px;color:#52525b;font-size:14px">Thanks for posting ${escapeHtml(input.company)}'s role on AgentJobs.dev. ` +
+    `<p style="margin:0 0 16px;color:#52525b;font-size:14px">Thanks for posting ${escapeHtml(input.company)}'s role on AgentJob.dev. ` +
     `It is now live on the board for ${input.durationDays} days and will be included in the next weekly digest.</p>` +
     `<p style="margin:0"><a href="${escapeHtml(input.jobUrl)}" style="display:inline-block;background:#059669;color:#fff;border-radius:8px;padding:10px 16px;font-size:14px;text-decoration:none">View your listing</a></p>` +
     '<p style="margin:20px 0 0;font-size:12px;color:#71717a">Need a change? Reply to this email and we will update the listing.</p>' +
     WRAPPER_END;
   const text =
-    `${subject}\n\nThanks for posting ${input.company}'s role on AgentJobs.dev. It is live for ${input.durationDays} days ` +
+    `${subject}\n\nThanks for posting ${input.company}'s role on AgentJob.dev. It is live for ${input.durationDays} days ` +
     `and will be included in the next weekly digest.\n\nView your listing: ${input.jobUrl}\n\n` +
     "Need a change? Reply to this email and we will update the listing.\n";
   return { to: input.to, subject, html, text, tags: [{ name: "category", value: "posting_confirmation" }] };

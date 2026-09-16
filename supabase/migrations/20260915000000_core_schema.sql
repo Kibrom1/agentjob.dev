@@ -1,5 +1,5 @@
 -- =============================================================================
--- AgentJobs.dev — Phase 1 core schema
+-- AgentJob.dev — Phase 1 core schema
 --
 -- Design notes
 --   * Lifecycle is an explicit enum (`job_status`) instead of an `is_active`

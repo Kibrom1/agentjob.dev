@@ -30,9 +30,9 @@ describe("templates", () => {
           is_featured: false,
         },
       ],
-      siteUrl: "https://agentjobs.dev",
-      unsubscribePageUrl: "https://agentjobs.dev/unsubscribe/t",
-      unsubscribePostUrl: "https://agentjobs.dev/api/unsubscribe/t",
+      siteUrl: "https://agentjob.dev",
+      unsubscribePageUrl: "https://agentjob.dev/unsubscribe/t",
+      unsubscribePostUrl: "https://agentjob.dev/api/unsubscribe/t",
       postalAddress: "1 Main St",
       campaign: "digest-2026-09-14",
       weekLabel: "Week of September 14, 2026",
@@ -42,7 +42,7 @@ describe("templates", () => {
     expect(message.html).toContain("&lt;script&gt;");
     expect(message.html).toContain("Evil &amp; Co");
     expect(message.html).toContain("utm_campaign=digest-2026-09-14");
-    expect(message.text).toContain("https://agentjobs.dev/jobs/x-1?utm_source=newsletter");
+    expect(message.text).toContain("https://agentjob.dev/jobs/x-1?utm_source=newsletter");
     expect(message.tags).toEqual([{ name: "category", value: "weekly_digest" }]);
   });
 
@@ -51,7 +51,7 @@ describe("templates", () => {
       to: "a@b.co",
       title: "Agent <Engineer>",
       company: "Orbit",
-      jobUrl: "https://agentjobs.dev/jobs/x",
+      jobUrl: "https://agentjob.dev/jobs/x",
       durationDays: 30,
     });
     expect(message.subject).toBe("Your listing is live: Agent <Engineer>");
@@ -63,14 +63,14 @@ describe("templates", () => {
 describe("resend client", () => {
   it("sends a single email with auth and idempotency headers", async () => {
     const fetchMock = vi.fn(async () => jsonResponse(200, { id: "msg_1" }));
-    const id = await sendEmail(email, { apiKey: "re_key", from: "AgentJobs <d@agentjobs.dev>", replyTo: "hi@agentjobs.dev", fetch: fetchMock }, "k1");
+    const id = await sendEmail(email, { apiKey: "re_key", from: "AgentJob <d@agentjob.dev>", replyTo: "hi@agentjob.dev", fetch: fetchMock }, "k1");
     expect(id).toBe("msg_1");
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://api.resend.com/emails");
     const headers = init.headers as Record<string, string>;
     expect(headers.Authorization).toBe("Bearer re_key");
     expect(headers["Idempotency-Key"]).toBe("k1");
-    expect(JSON.parse(String(init.body))).toMatchObject({ from: "AgentJobs <d@agentjobs.dev>", to: ["a@example.com"], reply_to: "hi@agentjobs.dev" });
+    expect(JSON.parse(String(init.body))).toMatchObject({ from: "AgentJob <d@agentjob.dev>", to: ["a@example.com"], reply_to: "hi@agentjob.dev" });
   });
 
   it("retries rate limits and server errors, honouring Retry-After", async () => {
@@ -82,7 +82,7 @@ describe("resend client", () => {
       .mockResolvedValueOnce(jsonResponse(200, { data: [{ id: "m1" }, { id: "m2" }] }));
     const ids = await sendEmailBatch([email, { ...email, to: "b@example.com" }], {
       apiKey: "re_key",
-      from: "d@agentjobs.dev",
+      from: "d@agentjob.dev",
       fetch: fetchMock,
       sleep: async (ms) => {
         sleeps.push(ms);

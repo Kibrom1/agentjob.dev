@@ -33,7 +33,7 @@ describe("env validation", () => {
 
   it("validates email settings and reports whether email is configured", () => {
     vi.stubEnv("RESEND_API_KEY", "re_abc_123");
-    vi.stubEnv("EMAIL_FROM", "AgentJobs <digest@agentjobs.dev>");
+    vi.stubEnv("EMAIL_FROM", "AgentJob <digest@agentjob.dev>");
     vi.stubEnv("EMAIL_REPLY_TO", "");
     vi.stubEnv("POSTAL_ADDRESS", "123 Market St, San Francisco, CA");
     expect(getEmailEnv()).toMatchObject({ EMAIL_REPLY_TO: undefined });

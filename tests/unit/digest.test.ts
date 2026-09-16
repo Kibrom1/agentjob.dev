@@ -48,7 +48,7 @@ function fakeDeps(opts: { existing?: DigestRun | null; jobs?: DigestJob[]; audie
   return deps;
 }
 
-const config = { siteUrl: "https://agentjobs.dev/", postalAddress: "1 Main St, Springfield, USA", sendWeekday: 1, timeBudgetMs: 45_000 };
+const config = { siteUrl: "https://agentjob.dev/", postalAddress: "1 Main St, Springfield, USA", sendWeekday: 1, timeBudgetMs: 45_000 };
 
 describe("week helpers", () => {
   it("computes the ISO week start (Monday, UTC)", () => {
@@ -88,9 +88,9 @@ describe("runWeeklyDigest", () => {
     const [emails, key] = deps.sendBatch.mock.calls[0]!;
     const email = emails[0] as unknown as { to: string; headers: Record<string, string>; text: string; html: string };
     expect(email.to).toBe("dev0@example.com");
-    expect(email.headers["List-Unsubscribe"]).toBe("<https://agentjobs.dev/api/unsubscribe/aaaaaaaa-0000-4000-8000-000000000000>");
+    expect(email.headers["List-Unsubscribe"]).toBe("<https://agentjob.dev/api/unsubscribe/aaaaaaaa-0000-4000-8000-000000000000>");
     expect(email.headers["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
-    expect(email.text).toContain("https://agentjobs.dev/unsubscribe/aaaaaaaa-0000-4000-8000-000000000000");
+    expect(email.text).toContain("https://agentjob.dev/unsubscribe/aaaaaaaa-0000-4000-8000-000000000000");
     expect(email.html).toContain("1 Main St, Springfield, USA");
     expect(key).toMatch(/^digest\/run-1\//);
   });

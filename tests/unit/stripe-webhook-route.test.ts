@@ -16,7 +16,7 @@ async function loadRoute() {
 }
 
 function request(body: string, signature?: string) {
-  return new Request("https://agentjobs.dev/api/stripe/webhook", {
+  return new Request("https://agentjob.dev/api/stripe/webhook", {
     method: "POST",
     body,
     headers: signature ? { "stripe-signature": signature } : {},

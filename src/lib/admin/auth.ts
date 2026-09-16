@@ -4,7 +4,7 @@
  * import `server-only`/env.ts, which cannot be bundled into the proxy.
  */
 
-export const ADMIN_REALM = "AgentJobs admin";
+export const ADMIN_REALM = "AgentJob admin";
 
 export type AdminCredentials = { username: string; password: string };
 

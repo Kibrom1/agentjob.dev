@@ -100,7 +100,7 @@ const emailSchema = z.object({
     .trim()
     .regex(/^re_[A-Za-z0-9_]+$/, "must be a Resend API key (re_)"),
   EMAIL_FROM: z
-    .string({ error: "is required, e.g. \"AgentJobs <digest@agentjobs.dev>\"" })
+    .string({ error: "is required, e.g. \"AgentJob <digest@agentjob.dev>\"" })
     .trim()
     .regex(/^(?:[^<>]+ )?<?[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+>?$/, "must be an address or \"Name <address>\""),
   EMAIL_REPLY_TO: z.email("must be an email address").optional(),

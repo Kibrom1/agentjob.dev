@@ -100,7 +100,7 @@ export function computeOpsFlags(stats: AdminStats, now: Date = new Date()): OpsF
 /** Renders a short, human-readable digest of stats + flags (used by the ops report route and the scheduled ops agent). */
 export function renderOpsSummary(stats: AdminStats, flags: OpsFlag[], now: Date = new Date()): string {
   const lines: string[] = [];
-  lines.push(`AgentJobs.dev ops report — ${now.toISOString()}`);
+  lines.push(`AgentJob.dev ops report — ${now.toISOString()}`);
   lines.push("");
   lines.push(
     `Live jobs: ${stats.live_jobs} (${stats.featured_live} featured) · Paid listings (30d): ${stats.paid_last_30d} · Subscribers: ${stats.subscribers_active}/${stats.subscribers_total}`,

@@ -12,7 +12,7 @@ export function getStripe(): Stripe {
     apiVersion: "2026-08-26.dahlia",
     maxNetworkRetries: 2,
     timeout: 15_000,
-    appInfo: { name: "agentjobs.dev", url: "https://agentjobs.dev" },
+    appInfo: { name: "agentjob.dev", url: "https://agentjob.dev" },
     // Only for stripe-mock / local test doubles; unset in production.
     ...(endpoint
       ? {

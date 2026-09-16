@@ -48,7 +48,7 @@ export function UnsubscribeForm({ token }: { token: string }) {
     <form action={action}>
       <h1 className="text-2xl font-semibold tracking-tight">Unsubscribe from the weekly digest?</h1>
       <p className="mt-3 text-zinc-600 dark:text-zinc-400">
-        You&apos;ll stop receiving the AgentJobs weekly email. This takes effect immediately.
+        You&apos;ll stop receiving the AgentJob weekly email. This takes effect immediately.
       </p>
       <input type="hidden" name="token" value={token} />
       <button

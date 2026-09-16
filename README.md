@@ -1,4 +1,4 @@
-# AgentJobs.dev
+# AgentJob.dev
 
 A job board for **AI agent and multi-agent systems engineers**: orchestration, tool-use backends, local LLM infrastructure, retrieval and memory, evals.
 
