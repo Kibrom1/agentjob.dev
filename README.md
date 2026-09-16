@@ -264,3 +264,19 @@ If the rate limiter itself fails, requests are allowed through rather than block
 **Changing prices.** Edit `src/lib/posting/pricing.ts`. The webhook checks payments against these same values.
 
 **Ops agent.** A daily scheduled task reads `GET /api/ops/report` (Bearer `CRON_SECRET` — same secret as the other cron routes, nothing new to generate) and `GET /api/jobs/recent`, then sends you a short digest: anything that needs attention (a stalled ingestion source, a stuck digest run, an empty board) plus draft social posts for newly published listings. It is read-only — no admin action or social post happens without you. See [`docs/ops-agent.md`](docs/ops-agent.md) for the design, and point it at your deployed URL once the site is live.
+
+---
+
+## 7. Review & QA agent team
+
+Separate from the build team above, a second team exists to interrogate the
+finished product rather than build it: Product Lead, UX Designer, Software
+Architect, Data Architect, Testing/QA Engineer, Full-Stack Engineer, plus
+Security & Compliance, DevOps/SRE, and Growth/Monetization seats. Each has a
+narrow mandate, a required output artifact, and a defined place in a review
+cycle (parallel first pass → Architect synthesis → QA reproduction → fix pass
+→ QA re-verification → Product Lead go/no-go).
+
+See [`docs/agent-team-guidelines.md`](docs/agent-team-guidelines.md) for the
+full roster and interaction rules, and [`docs/reviews/`](docs/reviews/) for
+past cycles' findings and the running changelog of what's been closed.
