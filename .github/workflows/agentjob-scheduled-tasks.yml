@@ -1,0 +1,47 @@
+name: AgentJob Scheduled Tasks
+
+on:
+  schedule:
+    # Digest every Monday at 14:00 UTC
+    - cron: "0 14 * * 1"
+    # Maintenance daily at 03:30 UTC
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job to run manually"
+        type: choice
+        options:
+          - digest
+          - maintenance
+        default: maintenance
+
+concurrency:
+  group: agentjob-scheduled-${{ github.event.schedule || inputs.job }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.schedule == '0 14 * * 1' || (github.event_name == 'workflow_dispatch' && inputs.job == 'digest')
+    steps:
+      - name: Send digest
+        run: |
+          curl --fail-with-body --retry 3 --retry-delay 5 -X POST \
+            "${{ vars.NEXT_PUBLIC_SITE_URL }}/api/cron/digest" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+
+  maintenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.schedule == '30 3 * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'maintenance')
+    steps:
+      - name: Run maintenance
+        run: |
+          curl --fail-with-body --retry 3 --retry-delay 5 -X POST \
+            "${{ vars.NEXT_PUBLIC_SITE_URL }}/api/cron/maintenance" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
