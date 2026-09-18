@@ -1,0 +1,10 @@
+# Not part of the Next.js deployment — runs via GitHub Actions instead.
+# Excluding it also stops Vercel's Python runtime from misdetecting
+# ingestion/pyproject.toml as a serverless function entrypoint.
+ingestion/
+
+# Test suites and local-only tooling — not needed at build/runtime.
+tests/
+db/
+docs/
+scripts/
