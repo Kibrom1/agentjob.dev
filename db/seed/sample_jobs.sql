@@ -3,6 +3,10 @@
 -- Run this in the Supabase SQL Editor (or via psql/Supabase CLI) against the
 -- production project. Each call uses the existing admin_create_job RPC, so it
 -- only inserts rows into public.jobs — it does not create or alter any tables.
+-- Idempotent: each listing is skipped if an admin-created job with the same
+-- title and company already exists, so re-running will not create duplicates.
+-- NOTE: these appear on the live board as real listings. Delete them (or mark
+-- them rejected in /admin) once real jobs exist.
 
 select public.admin_create_job(
   jsonb_build_object(
@@ -21,6 +25,10 @@ select public.admin_create_job(
   ),
   true,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Senior Agent Orchestration Engineer' and company = 'Cascade Systems'
 );
 
 select public.admin_create_job(
@@ -38,6 +46,10 @@ select public.admin_create_job(
   ),
   false,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Multi-Agent Systems Engineer' and company = 'Meridian AI Labs'
 );
 
 select public.admin_create_job(
@@ -57,6 +69,10 @@ select public.admin_create_job(
   ),
   false,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Tool-Use Backend Engineer (Contract)' and company = 'Solstice Robotics'
 );
 
 select public.admin_create_job(
@@ -76,6 +92,10 @@ select public.admin_create_job(
   ),
   false,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Local LLM Infrastructure Engineer' and company = 'Northbeam AI'
 );
 
 select public.admin_create_job(
@@ -93,6 +113,10 @@ select public.admin_create_job(
   ),
   true,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Retrieval & Agent Memory Engineer' and company = 'Fernweg Data'
 );
 
 select public.admin_create_job(
@@ -110,6 +134,10 @@ select public.admin_create_job(
   ),
   false,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Agent Evals & Observability Engineer' and company = 'Clearwater Analytics AI'
 );
 
 select public.admin_create_job(
@@ -129,6 +157,10 @@ select public.admin_create_job(
   ),
   false,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'Agent Platform Engineer' and company = 'Lattice Works'
 );
 
 select public.admin_create_job(
@@ -146,6 +178,10 @@ select public.admin_create_job(
   ),
   false,
   30
+)
+where not exists (
+  select 1 from public.jobs
+  where source = 'admin' and title = 'AI Agent Orchestration Intern' and company = 'Driftwood AI'
 );
 
 select count(*) as newly_created_jobs from public.jobs where source = 'admin';
