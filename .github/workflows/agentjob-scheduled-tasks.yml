@@ -1,11 +1,8 @@
 name: AgentJob Scheduled Tasks
 
+# Scheduling is owned by Vercel Cron (see vercel.json). This workflow is a
+# manual fallback only, so the endpoints are never triggered from two schedulers.
 on:
-  schedule:
-    # Digest every Monday at 14:00 UTC
-    - cron: "0 14 * * 1"
-    # Maintenance daily at 03:30 UTC
-    - cron: "30 3 * * *"
   workflow_dispatch:
     inputs:
       job:
@@ -17,7 +14,7 @@ on:
         default: maintenance
 
 concurrency:
-  group: agentjob-scheduled-${{ github.event.schedule || inputs.job }}
+  group: agentjob-scheduled-${{ inputs.job }}
   cancel-in-progress: false
 
 permissions:
@@ -27,21 +24,21 @@ jobs:
   digest:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event.schedule == '0 14 * * 1' || (github.event_name == 'workflow_dispatch' && inputs.job == 'digest')
+    if: inputs.job == 'digest'
     steps:
       - name: Send digest
         run: |
-          curl --fail-with-body --retry 3 --retry-delay 5 -X POST \
+          curl --fail-with-body --retry 3 --retry-delay 5 \
             "${{ vars.NEXT_PUBLIC_SITE_URL }}/api/cron/digest" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
 
   maintenance:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event.schedule == '30 3 * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'maintenance')
+    if: inputs.job == 'maintenance'
     steps:
       - name: Run maintenance
         run: |
-          curl --fail-with-body --retry 3 --retry-delay 5 -X POST \
+          curl --fail-with-body --retry 3 --retry-delay 5 \
             "${{ vars.NEXT_PUBLIC_SITE_URL }}/api/cron/maintenance" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

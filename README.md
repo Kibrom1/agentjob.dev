@@ -236,7 +236,7 @@ It needs Chromium: run `npx playwright install chromium` once.
 
 > 🔐 **Needs write access to the repository settings.**
 
-- **Workflow files:** `.github/workflows/ci.yml` (lint, tests, build, database and end-to-end suites) and `ingest.yml` (every 6 hours). If they are not in the repository yet, copy them into `.github/workflows/`.
+- **Workflow files:** `.github/workflows/ci.yml` (lint, tests, build, database and end-to-end suites) and `ingest.yml` (every 6 hours). `agentjob-scheduled-tasks.yml` is a manual-only fallback that triggers the digest or maintenance endpoints on demand; Vercel Cron owns the schedule. If they are not in the repository yet, copy them into `.github/workflows/`.
 - **Secrets:** add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` under Settings → Secrets and variables → Actions. Ingestion needs them.
 - **First run:** run **Ingest jobs** manually with `dry_run: true`, check the summary, then run it for real so the board isn't empty at launch.
 
