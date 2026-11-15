@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PostJobForm } from "@/components/post-job/post-job-form";
 import { listCategories } from "@/lib/jobs";
 import { legalConfig, isPlaceholder } from "@/lib/legal";
@@ -112,9 +113,9 @@ function ComingSoon() {
         </p>
       )}
       <p className="mt-8">
-        <a href="/" className="text-sm font-medium underline underline-offset-2">
+        <Link href="/" className="text-sm font-medium underline underline-offset-2">
           Back to all jobs
-        </a>
+        </Link>
       </p>
     </div>
   );
