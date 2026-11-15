@@ -11,5 +11,5 @@
       "schedule": "30 3 * * *"
     }
   ],
-  "ignoreCommand": "bash scripts/vercel-ignore-build.sh"
+  "ignoreCommand": "bash vercel-ignore-build.sh"
 }
