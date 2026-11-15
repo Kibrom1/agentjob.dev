@@ -54,7 +54,7 @@ describe("footer and sitemap", () => {
 });
 
 describe("online-only business (no postal address on the site)", () => {
-  it("footer does not show a postal-address placeholder when POSTAL_ADDRESS is unset", () => {
+  it("footer does not show a postal address unless PUBLIC_POSTAL_ADDRESS is set", () => {
     const html = renderToStaticMarkup(createElement(SiteFooter));
     expect(html).not.toContain("postal address");
   });
