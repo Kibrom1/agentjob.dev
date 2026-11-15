@@ -134,10 +134,35 @@ describe("handleStripeEvent", () => {
     expect(await handleStripeEvent(signedEvent("checkout.session.completed", paidSession()), d)).toBe("not_found");
   });
 
-  it("reports sessions that can no longer be activated", async () => {
-    const d = deps({ activateJob: vi.fn(async () => job("payment_expired")) });
+  it("reports sessions that can no longer be activated, with a structured alert", async () => {
+    const d = deps({ activateJob: vi.fn(async () => job("rejected")) });
     expect(await handleStripeEvent(signedEvent("checkout.session.completed", paidSession()), d)).toBe("not_activatable");
     expect(d.onPublished).not.toHaveBeenCalled();
+    expect(d.log.error).toHaveBeenCalledWith(
+      expect.stringContaining("could not activate"),
+      expect.objectContaining({ alert: "not_activatable", status: "rejected" }),
+    );
+  });
+
+  it("publishes a paid session whose job was already marked payment_expired", async () => {
+    const d = deps({ findJobBySession: vi.fn(async () => job("payment_expired")) });
+    expect(await handleStripeEvent(signedEvent("checkout.session.async_payment_succeeded", paidSession()), d)).toBe("activated");
+    expect(d.activateJob).toHaveBeenCalledWith(SESSION_ID, true);
+  });
+
+  it("never revives a payment_expired job for an unpaid session", async () => {
+    const d = deps({ findJobBySession: vi.fn(async () => job("payment_expired")) });
+    const event = signedEvent("checkout.session.completed", paidSession({ payment_status: "unpaid" }));
+    expect(await handleStripeEvent(event, d)).toBe("awaiting_payment");
+    expect(d.activateJob).not.toHaveBeenCalled();
+  });
+
+  it("alerts on amount mismatches without publishing", async () => {
+    const d = deps({ findJobBySession: vi.fn(async () => job("payment_expired")) });
+    const event = signedEvent("checkout.session.completed", paidSession({ amount_subtotal: 1 }));
+    expect(await handleStripeEvent(event, d)).toBe("amount_mismatch");
+    expect(d.activateJob).not.toHaveBeenCalled();
+    expect(d.log.error).toHaveBeenCalledWith(expect.any(String), expect.objectContaining({ alert: "amount_mismatch" }));
   });
 
   it("does not fail the webhook when follow-ups fail", async () => {

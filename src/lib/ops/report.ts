@@ -1,6 +1,6 @@
 import type { AdminStats } from "@/lib/admin/jobs";
 
-export type OpsFlagLevel = "warning" | "info";
+export type OpsFlagLevel = "critical" | "warning" | "info";
 
 export type OpsFlag = {
   level: OpsFlagLevel;
@@ -29,8 +29,8 @@ export function computeOpsFlags(stats: AdminStats, now: Date = new Date()): OpsF
 
   if (stats.live_jobs === 0) {
     flags.push({
-      level: "warning",
-      code: "board_empty",
+      level: "critical",
+      code: "no_live_jobs",
       message: "Zero live job listings. The public board will look empty to visitors right now.",
     });
   }
@@ -119,15 +119,19 @@ export function renderOpsSummary(stats: AdminStats, flags: OpsFlag[], now: Date 
     );
   }
 
+  const criticals = flags.filter((flag) => flag.level === "critical");
   const warnings = flags.filter((flag) => flag.level === "warning");
   const infos = flags.filter((flag) => flag.level === "info");
+  if (criticals.length > 0) {
+    lines.push("", "CRITICAL:", ...criticals.map((flag) => `  ✖ ${flag.message}`));
+  }
   if (warnings.length > 0) {
     lines.push("", "Needs attention:", ...warnings.map((flag) => `  ⚠ ${flag.message}`));
   }
   if (infos.length > 0) {
     lines.push("", "For information:", ...infos.map((flag) => `  · ${flag.message}`));
   }
-  if (warnings.length === 0 && infos.length === 0) {
+  if (criticals.length === 0 && warnings.length === 0 && infos.length === 0) {
     lines.push("", "Nothing needs attention.");
   }
 
