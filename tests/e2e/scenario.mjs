@@ -227,7 +227,8 @@ async function main() {
     await page.goto(`${APP}/`);
     await page.fill("#home-digest-email", "  Reader@Example.com ");
     await page.locator("#subscribe button[type=submit]").click();
-    await page.locator("#subscribe [role=status]").waitFor();
+    // The live region is always mounted (empty until the action resolves), so wait for its text.
+    await page.locator("#subscribe [role=status]", { hasText: "Check your inbox" }).waitFor();
     subscriber = await one("select * from subscribers where email = 'reader@example.com'");
     assert.ok(subscriber);
     assert.equal(subscriber.confirmed_at, null, "new subscribers start pending");
