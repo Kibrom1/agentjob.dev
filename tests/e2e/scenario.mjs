@@ -339,6 +339,11 @@ async function main() {
     const sitemap = await (await fetch(`${APP}/sitemap.xml`)).text();
     assert.match(sitemap, /post-a-job/);
     assert.match(sitemap, /staff-agent-runtime-engineer/);
+    for (const path of ["/terms", "/privacy", "/refund", "/about"]) {
+      const res = await fetch(`${APP}${path}`);
+      assert.equal(res.status, 200, `${path} should return 200`);
+      assert.match(sitemap, new RegExp(path));
+    }
   });
 
   await step("no uncaught browser errors", async () => {

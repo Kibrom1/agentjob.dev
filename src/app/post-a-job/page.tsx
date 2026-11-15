@@ -69,6 +69,17 @@ export default async function PostJobPage({ searchParams }: Props) {
               <dd className="font-medium">+{formatUsd(PRICING.featured.amount)}</dd>
             </div>
           </dl>
+          <p className="mt-4 text-xs text-zinc-600 dark:text-zinc-400">
+            By continuing you agree to the{" "}
+            <a href="/terms" className="underline underline-offset-2">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/refund" className="underline underline-offset-2">
+              Refund policy
+            </a>
+            .
+          </p>
         </section>
       </aside>
     </div>
