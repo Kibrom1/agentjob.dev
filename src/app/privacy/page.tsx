@@ -16,7 +16,13 @@ export default function PrivacyPage() {
     <LegalPage title="Privacy policy">
       <p>
         This policy explains what {siteConfig.domain} collects. The controller is{" "}
-        <LegalValue value={legalConfig.companyName} />, <LegalValue value={legalConfig.postalAddress} />.
+        <LegalValue value={legalConfig.companyName} />
+        {legalConfig.postalAddress && (
+          <>
+            , <LegalValue value={legalConfig.postalAddress} />
+          </>
+        )}
+        .
       </p>
 
       <h2>What we collect</h2>

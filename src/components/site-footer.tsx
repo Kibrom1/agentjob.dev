@@ -40,8 +40,14 @@ export function SiteFooter() {
           </nav>
         </div>
         <p className="text-xs">
-          © {year} <LegalValue value={legalConfig.companyName} /> · <LegalValue value={legalConfig.postalAddress} /> ·{" "}
-          <LegalValue value={legalConfig.contactEmail} />
+          © {year} <LegalValue value={legalConfig.companyName} />
+          {legalConfig.postalAddress && (
+            <>
+              {" "}
+              · <LegalValue value={legalConfig.postalAddress} />
+            </>
+          )}{" "}
+          · <LegalValue value={legalConfig.contactEmail} />
         </p>
       </div>
     </footer>

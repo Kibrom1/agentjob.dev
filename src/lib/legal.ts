@@ -10,8 +10,12 @@ export const legalConfig = {
   companyName: "Bright Steps Digital",
   contactEmail: "brightstepsdigitalllc@gmail.com",
   privacyEmail: "brightstepsdigitalllc@gmail.com",
-  // Same value as the POSTAL_ADDRESS env var the digest requires (src/lib/env.ts).
-  postalAddress: process.env.POSTAL_ADDRESS?.trim() || "[[PLACEHOLDER: postal address (also POSTAL_ADDRESS env var)]]",
+  // Online-only business. The website shows NO address by default. Set
+  // PUBLIC_POSTAL_ADDRESS only if you want one published in the footer and
+  // privacy policy. This is deliberately separate from POSTAL_ADDRESS, which
+  // is the sender address printed in digest emails (CAN-SPAM) and is never
+  // rendered on the site, so a home address used for email stays off the web.
+  postalAddress: process.env.PUBLIC_POSTAL_ADDRESS?.trim() ?? "",
   jurisdiction: "[[PLACEHOLDER: governing law and jurisdiction]]",
   lastUpdated: "[[PLACEHOLDER: date these terms were last reviewed]]",
 } as const;
