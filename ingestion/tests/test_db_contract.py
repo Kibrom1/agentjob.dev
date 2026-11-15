@@ -38,7 +38,7 @@ def rows_from_fixtures(load_fixture):
             postings.append(parsed)
     report = SourceReport(source_name=source.source_name)
     jobs = select_jobs(FetchResult(postings, complete=True), source, report)
-    assert len(jobs) >= 3, "fixtures should yield several relevant jobs"
+    assert len(jobs) >= 2, "fixtures should yield several relevant jobs (classifier is strict after WP-5)"
     return [job.to_payload() for job in jobs]
 
 
