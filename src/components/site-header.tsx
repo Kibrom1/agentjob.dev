@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
+import { NavLink } from "@/components/nav-link";
 
 export function SiteHeader() {
   return (
@@ -7,24 +8,26 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Logo />
         <nav aria-label="Primary" className="flex items-center gap-1 text-sm">
-          <Link
+          <NavLink
             href="/"
             className="hidden rounded-md px-3 py-1.5 whitespace-nowrap text-zinc-600 sm:inline-flex transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+            activeClassName="bg-zinc-100 font-medium !text-zinc-900 underline decoration-2 underline-offset-8 dark:bg-zinc-800 dark:!text-zinc-100"
           >
             Browse jobs
-          </Link>
+          </NavLink>
           <Link
             href={{ pathname: "/", hash: "subscribe" }}
             className="hidden rounded-md px-3 py-1.5 whitespace-nowrap text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 sm:inline-flex dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
           >
             Weekly digest
           </Link>
-          <Link
+          <NavLink
             href="/post-a-job"
             className="rounded-md bg-zinc-900 px-3 py-1.5 font-medium whitespace-nowrap text-white transition-colors hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+            activeClassName="underline decoration-2 underline-offset-4"
           >
             Post a job
-          </Link>
+          </NavLink>
         </nav>
       </div>
     </header>

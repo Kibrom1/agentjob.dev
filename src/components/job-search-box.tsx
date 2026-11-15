@@ -116,7 +116,7 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
             clear();
           }
         }}
-        className="peer h-12 w-full rounded-xl border border-zinc-300 bg-white pr-20 pl-10 text-[15px] shadow-sm transition-colors placeholder:text-zinc-400 hover:border-zinc-400 focus:border-accent-500 focus:ring-4 focus:ring-accent-500/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
+        className="peer h-12 w-full rounded-xl border border-zinc-300 bg-white pr-28 pl-10 sm:pr-20 text-[15px] shadow-sm transition-colors placeholder:text-zinc-400 hover:border-zinc-400 focus:border-accent-500 focus:ring-4 focus:ring-accent-500/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
       />
       {preserved.category && <input type="hidden" name="category" value={preserved.category} />}
       {preserved.workplace && <input type="hidden" name="workplace" value={preserved.workplace} />}
@@ -126,7 +126,7 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
       <button
         type="button"
         onClick={clear}
-        className="absolute top-1/2 right-3 -translate-y-1/2 rounded-md px-1.5 py-0.5 text-xs text-zinc-500 peer-placeholder-shown:hidden hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
+        className="absolute top-1/2 right-14 -translate-y-1/2 rounded-md sm:right-3 px-1.5 py-0.5 text-xs text-zinc-500 peer-placeholder-shown:hidden hover:bg-zinc-100 hover:text-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-zinc-100"
       >
         Clear
       </button>
@@ -134,11 +134,21 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
         <span
           role="status"
           aria-label="Updating results"
-          className="absolute top-1/2 right-16 size-4 -translate-y-1/2 animate-spin motion-reduce:animate-none rounded-full border-2 border-zinc-300 border-t-accent-600"
+          className="absolute top-1/2 right-28 size-4 sm:right-16 -translate-y-1/2 animate-spin motion-reduce:animate-none rounded-full border-2 border-zinc-300 border-t-accent-600"
         />
       )}
-      <button type="submit" className="sr-only">
-        Search
+      <button
+        type="submit"
+        aria-label="Search"
+        className="absolute top-1/2 right-1.5 grid size-9 -translate-y-1/2 place-items-center rounded-lg bg-zinc-900 text-white transition-colors hover:bg-zinc-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 sm:sr-only dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+      >
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="currentColor" className="size-4">
+          <path
+            fillRule="evenodd"
+            d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.08 3.08a.75.75 0 1 1-1.06 1.06l-3.08-3.08A7 7 0 0 1 2 9Z"
+            clipRule="evenodd"
+          />
+        </svg>
       </button>
     </form>
   );
