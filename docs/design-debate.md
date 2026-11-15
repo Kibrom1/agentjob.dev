@@ -1,4 +1,4 @@
-# AgentJob.dev: design debate and final blueprint
+# agenticroles.dev: design debate and final blueprint
 
 This records how three reviewer personas debated the design of the full build: employer posting, payments, admin, ingestion and the weekly digest. Every decision below is in the code.
 

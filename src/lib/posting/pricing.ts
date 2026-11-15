@@ -8,7 +8,7 @@ export const PRICING = {
   listing: {
     amount: 14_900,
     durationDays: 30,
-    name: "AgentJob.dev job listing (30 days)",
+    name: "agenticroles.dev job listing (30 days)",
   },
   featured: {
     amount: 9_900,

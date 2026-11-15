@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { siteConfig } from "@/lib/site";
 
+/** Splits "agenticroles.dev" into the wordmark and its TLD so the logo always matches siteConfig.domain. */
+export function splitDomain(domain: string): { label: string; tld: string } {
+  const dot = domain.lastIndexOf(".");
+  return dot === -1 ? { label: domain, tld: "" } : { label: domain.slice(0, dot), tld: domain.slice(dot) };
+}
+
 export function Logo() {
+  const { label, tld } = splitDomain(siteConfig.domain);
   return (
     <Link
       href="/"
@@ -15,7 +22,8 @@ export function Logo() {
         {">_"}
       </span>
       <span>
-        agentjobs<span className="text-zinc-400 dark:text-zinc-500">.dev</span>
+        {label}
+        <span className="text-zinc-400 dark:text-zinc-500">{tld}</span>
       </span>
     </Link>
   );

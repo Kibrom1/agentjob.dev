@@ -1,4 +1,4 @@
--- AgentJob.dev local seed data
+-- agenticroles.dev local seed data
 
 insert into public.employers (id, company_name, email, website_url)
 values

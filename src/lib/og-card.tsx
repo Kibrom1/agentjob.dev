@@ -30,7 +30,7 @@ export function renderOgCard({ heading, subheading, meta, headingSize = 72 }: Ca
         }}
       >
         <div style={{ display: "flex", fontSize: 36, fontWeight: 700, color: "#a1a1aa" }}>
-          agentjob.dev
+          agenticroles.dev
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
           <div style={{ display: "flex", fontSize: headingSize, fontWeight: 700, lineHeight: 1.1 }}>
@@ -53,7 +53,7 @@ export function renderOgCard({ heading, subheading, meta, headingSize = 72 }: Ca
 
 export function renderSiteCard(): ImageResponse {
   return renderOgCard({
-    heading: "AgentJob",
+    heading: "Agentic Roles",
     subheading: "Jobs for engineers who build AI agents",
     meta: "Orchestration, tool-use backends, local LLM infrastructure, evals and more",
     headingSize: 120,
