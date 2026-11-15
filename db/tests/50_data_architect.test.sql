@@ -142,21 +142,21 @@ begin
   call test_helpers.expect_error(
     $f$insert into public.jobs (
       status, source, title, company, location, workplace_type, category_slug,
-      description, apply_url, is_featured, expires_at, featured_until
+      description, apply_url, is_featured, published_at, expires_at, featured_until
     ) values (
       'active', 'admin', 'Featured Past Expiry Role', 'Co', 'Remote', 'remote', 'agent-platform',
       $desc$A sufficiently long job description for testing. A sufficiently long job description for testing. $desc$,
-      'https://x.test', true, now() + interval '1 day', now() + interval '2 days'
+      'https://x.test', true, now(), now() + interval '1 day', now() + interval '2 days'
     )$f$,
     '23514');
 
   -- happy path for contrast: featured_until at or before expires_at is fine.
   insert into public.jobs (
     status, source, title, company, location, workplace_type, category_slug,
-    description, apply_url, is_featured, expires_at, featured_until
+    description, apply_url, is_featured, published_at, expires_at, featured_until
   ) values (
     'active', 'admin', 'Featured Within Window Role', 'Co', 'Remote', 'remote', 'agent-platform',
-    v_desc, 'https://x.test', true, now() + interval '2 days', now() + interval '2 days'
+    v_desc, 'https://x.test', true, now(), now() + interval '2 days', now() + interval '2 days'
   );
   perform test_helpers.assert(
     (select is_featured from public.jobs where title = 'Featured Within Window Role'),
