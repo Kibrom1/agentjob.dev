@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { PostJobForm } from "@/components/post-job/post-job-form";
 import { listCategories } from "@/lib/jobs";
+import { legalConfig, isPlaceholder } from "@/lib/legal";
+import { isPostingEnabled } from "@/lib/posting/availability";
 import { PRICING, formatUsd } from "@/lib/posting/pricing";
 import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Post a job",
-  description: `Reach engineers who build AI agents. ${formatUsd(PRICING.listing.amount)} for ${PRICING.listing.durationDays} days on ${siteConfig.domain}.`,
+  description: isPostingEnabled()
+    ? `Reach engineers who build AI agents. ${formatUsd(PRICING.listing.amount)} for ${PRICING.listing.durationDays} days on ${siteConfig.domain}.`
+    : `Paid job posting on ${siteConfig.domain} is coming soon.`,
   alternates: { canonical: "/post-a-job" },
 };
 
@@ -20,6 +24,8 @@ const BENEFITS = [
 ];
 
 export default async function PostJobPage({ searchParams }: Props) {
+  if (!isPostingEnabled()) return <ComingSoon />;
+
   const params = await searchParams;
   const canceled = params.canceled === "1";
   const categories = await listCategories();
@@ -82,6 +88,34 @@ export default async function PostJobPage({ searchParams }: Props) {
           </p>
         </section>
       </aside>
+    </div>
+  );
+}
+
+function ComingSoon() {
+  const email = legalConfig.contactEmail;
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6">
+      <p className="font-mono text-xs tracking-wider text-accent-700 uppercase dark:text-accent-400">For employers</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight text-balance">Paid job posting is coming soon</h1>
+      <p className="mt-3 text-zinc-600 dark:text-zinc-400">
+        We&apos;re putting the finishing touches on employer posting and payments. In the meantime, every role on the
+        board is collected from public company job boards, and the weekly digest keeps engineers up to date.
+      </p>
+      {!isPlaceholder(email) && (
+        <p className="mt-6 text-zinc-600 dark:text-zinc-400">
+          Want to be first to post a role? Email{" "}
+          <a href={`mailto:${email}?subject=${encodeURIComponent("Early access: posting a job")}`} className="font-medium underline underline-offset-2">
+            {email}
+          </a>
+          .
+        </p>
+      )}
+      <p className="mt-8">
+        <a href="/" className="text-sm font-medium underline underline-offset-2">
+          Back to all jobs
+        </a>
+      </p>
     </div>
   );
 }

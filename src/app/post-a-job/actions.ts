@@ -3,6 +3,7 @@
 import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { EnvConfigError } from "@/lib/env";
+import { isPostingEnabled } from "@/lib/posting/availability";
 import { planFor } from "@/lib/posting/pricing";
 import {
   firstStepWithError,
@@ -33,6 +34,11 @@ function failure(message: string, fieldErrors: FieldErrors = {}, step?: number):
  * a verified payment (webhook or success-page check) activates the job.
  */
 export async function startJobCheckout(_previous: PostJobState, formData: FormData): Promise<PostJobState> {
+  // Server-side gate: hiding the form is not enough, the action is callable directly.
+  if (!isPostingEnabled()) {
+    return failure("Paid job posting is coming soon. It isn't open yet.", {}, 0);
+  }
+
   const honeypot = formData.get("nickname");
   if (typeof honeypot === "string" && honeypot !== "") {
     return failure("Something went wrong. Please try again.", {}, 0);
