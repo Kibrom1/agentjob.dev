@@ -21,6 +21,9 @@
   }
 
   html {
+    /* Keep keyboard-focused elements clear of the sticky header (3.5rem) and the mobile apply bar. */
+    scroll-padding-top: 4.5rem;
+    scroll-padding-bottom: 5rem;
     -webkit-text-size-adjust: 100%;
     text-rendering: optimizeLegibility;
   }
@@ -48,5 +51,17 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Inline meta lists: the "·" separator trails each item (never leads a wrapped line). */
+.meta-item:not(:last-child)::after {
+  content: "·" / "";
+  margin-inline-start: 0.5rem;
+  color: var(--color-zinc-400);
+}
+@media (prefers-color-scheme: dark) {
+  .meta-item:not(:last-child)::after {
+    color: var(--color-zinc-600);
   }
 }

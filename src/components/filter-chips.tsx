@@ -29,9 +29,9 @@ export function FilterChips({ label, chips }: FilterChipsProps) {
               <Link
                 href={chip.href}
                 title={chip.title}
-                aria-current={chip.active ? "page" : undefined}
+                aria-current={chip.active ? "true" : undefined}
                 scroll={false}
-                className={`inline-flex h-8 items-center rounded-full border px-3 text-sm whitespace-nowrap transition-colors ${
+                className={`inline-flex h-11 items-center sm:h-8 rounded-full border px-3 text-sm whitespace-nowrap transition-colors ${
                   chip.active
                     ? "border-zinc-900 bg-zinc-900 font-medium text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
                     : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-zinc-100"

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-metadata";
 import Link from "next/link";
 import { WaitlistForm } from "@/components/post-job/waitlist-form";
 import { PostJobForm } from "@/components/post-job/post-job-form";
@@ -8,13 +9,13 @@ import { isPostingEnabled } from "@/lib/posting/availability";
 import { PRICING, formatUsd } from "@/lib/posting/pricing";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Post a job",
   description: isPostingEnabled()
     ? `Reach engineers who build AI agents. ${formatUsd(PRICING.listing.amount)} for ${PRICING.listing.durationDays} days on ${siteConfig.domain}.`
     : `Paid job posting on ${siteConfig.domain} is coming soon.`,
-  alternates: { canonical: "/post-a-job" },
-};
+  path: "/post-a-job",
+});
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 

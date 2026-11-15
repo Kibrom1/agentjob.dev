@@ -1,15 +1,16 @@
 // DRAFT, NOT LEGAL ADVICE. Factual description derived from the code; every
 // legal specific is a [[PLACEHOLDER]] in src/lib/legal.ts. Needs lawyer review.
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-metadata";
 import { ContactLink, LegalPage, LegalValue } from "@/components/legal-page";
 import { legalConfig } from "@/lib/legal";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy policy",
   description: `What ${siteConfig.domain} collects, who processes it, and how to ask for deletion.`,
-  alternates: { canonical: "/privacy" },
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (

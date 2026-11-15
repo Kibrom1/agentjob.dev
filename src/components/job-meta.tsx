@@ -27,18 +27,14 @@ export function JobMeta({ location, workplaceType, jobType, salaryMin, salaryMax
       : []),
     ...(locationMentionsWorkplace ? [] : [{ key: "workplace", label: workplace }]),
     { key: "type", label: JOB_TYPE_LABELS[jobType] },
-    salary ? { key: "salary", label: salary, emphasis: true } : { key: "salary", label: "Salary not listed" },
+    // Most ingested roles carry no salary; omitting the label keeps cards quiet. The detail page says "Not listed".
+    ...(salary ? [{ key: "salary", label: salary, emphasis: true }] : []),
   ];
 
   return (
-    <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400">
-      {parts.map((part, index) => (
-        <li key={part.key} className="flex items-center gap-2">
-          {index > 0 && (
-            <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">
-              ·
-            </span>
-          )}
+    <ul className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-600 dark:text-zinc-400">
+      {parts.map((part) => (
+        <li key={part.key} className="meta-item">
           <span
             title={part.title}
             className={part.emphasis ? "font-medium text-zinc-800 dark:text-zinc-200" : undefined}

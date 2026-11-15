@@ -1,16 +1,17 @@
 // DRAFT, NOT LEGAL ADVICE. Factual description derived from the code; every
 // legal specific is a [[PLACEHOLDER]] in src/lib/legal.ts. Needs lawyer review.
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-metadata";
 import { LegalPage, LegalValue } from "@/components/legal-page";
 import { legalConfig } from "@/lib/legal";
 import { PRICING, formatUsd } from "@/lib/posting/pricing";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of service",
   description: `The terms for using ${siteConfig.domain} and posting jobs on it.`,
-  alternates: { canonical: "/terms" },
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (

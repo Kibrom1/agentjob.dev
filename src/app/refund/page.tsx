@@ -1,16 +1,17 @@
 // DRAFT, NOT LEGAL ADVICE. The refund terms are an undecided business and legal
 // choice: every commitment below is a [[PLACEHOLDER]] until the owner decides.
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-metadata";
 import { ContactLink, LegalPage } from "@/components/legal-page";
 import { legalConfig } from "@/lib/legal";
 import { PRICING, formatUsd } from "@/lib/posting/pricing";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Refund policy",
   description: `Refunds for job listings on ${siteConfig.domain}.`,
-  alternates: { canonical: "/refund" },
-};
+  path: "/refund",
+});
 
 export default function RefundPage() {
   return (

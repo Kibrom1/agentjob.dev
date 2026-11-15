@@ -125,7 +125,7 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
             clear();
           }
         }}
-        className="peer h-12 w-full rounded-xl border border-zinc-300 bg-white pr-28 pl-10 sm:pr-20 text-[15px] shadow-sm transition-colors placeholder:text-zinc-400 hover:border-zinc-400 focus:border-accent-500 focus:ring-4 focus:ring-accent-500/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-zinc-600"
+        className="peer h-12 w-full rounded-xl border border-zinc-500 bg-white pr-28 pl-10 sm:pr-20 text-[15px] shadow-sm transition-colors placeholder:text-zinc-500 hover:border-zinc-700 focus:border-accent-500 focus:ring-4 focus:ring-accent-500/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 dark:focus-visible:outline-accent-400 dark:border-zinc-500 dark:bg-zinc-900 dark:placeholder:text-zinc-400 dark:hover:border-zinc-300"
       />
       {preserved.category && <input type="hidden" name="category" value={preserved.category} />}
       {preserved.workplace && <input type="hidden" name="workplace" value={preserved.workplace} />}
