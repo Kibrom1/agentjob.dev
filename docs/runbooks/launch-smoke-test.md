@@ -57,7 +57,7 @@ From the plan; none of this can be done by a developer or agent.
    from a Vercel preview or production in test mode: the job goes `active`, the success page renders, the
    receipt email arrives. Then switch to live keys, and optionally make and refund one real purchase. Review
    coupons: only controlled promotion codes may exist (`allow_promotion_codes: true`).
-7. Domain: decide the brand spelling (agentjob.dev vs agentjobs.dev); DNS, Vercel domain assignment, SSL;
+7. Domain: decide the brand spelling (agenticroles.dev vs agenticroles.dev); DNS, Vercel domain assignment, SSL;
    update `NEXT_PUBLIC_SITE_URL`.
 8. Legal: company entity name, contact and privacy emails, postal address, governing law, refund policy, lawyer
    review of Terms, Privacy, Refund and About; fill `src/lib/legal.ts`; run

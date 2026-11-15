@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only production smoke test for AgentJob.dev.
+# Read-only production smoke test for agenticroles.dev.
 #
 # Usage:
 #   SITE_URL=https://agentjob-dev.vercel.app ./scripts/smoke-test.sh
@@ -201,7 +201,7 @@ fi
 
 # Report
 echo
-echo "AgentJob smoke test: $SITE_URL (read-only, GET only)"
+echo "Agentic Roles smoke test: $SITE_URL (read-only, GET only)"
 printf '%-6s  %-30s  %s\n' STATUS CHECK DETAIL
 printf '%-6s  %-30s  %s\n' ------ ------------------------------ ------
 for row in "${ROWS[@]}"; do

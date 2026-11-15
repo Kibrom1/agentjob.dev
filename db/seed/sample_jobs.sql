@@ -1,4 +1,4 @@
--- Seed sample job listings for AgentJob.dev
+-- Seed sample job listings for agenticroles.dev
 -- Fictional companies only (not real orgs), so no real employer is misrepresented.
 -- Run this in the Supabase SQL Editor (or via psql/Supabase CLI) against the
 -- production project. Each call uses the existing admin_create_job RPC, so it

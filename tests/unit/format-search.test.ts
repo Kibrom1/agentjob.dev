@@ -28,15 +28,15 @@ describe("format helpers", () => {
   });
 
   it("builds attributed apply links and refuses unsafe schemes", () => {
-    expect(buildApplyHref("https://x.dev/apply?ref=1", "Role", "agentjob.dev")).toBe(
-      "https://x.dev/apply?ref=1&utm_source=agentjob.dev&utm_medium=job_board",
+    expect(buildApplyHref("https://x.dev/apply?ref=1", "Role", "agenticroles.dev")).toBe(
+      "https://x.dev/apply?ref=1&utm_source=agenticroles.dev&utm_medium=job_board",
     );
-    expect(buildApplyHref("https://x.dev/a?utm_source=own", "Role", "agentjob.dev")).toBe("https://x.dev/a?utm_source=own");
-    expect(buildApplyHref("mailto:jobs@x.dev", "Agent Eng", "agentjob.dev")).toBe(
-      "mailto:jobs@x.dev?subject=Application%3A%20Agent%20Eng%20(via%20agentjob.dev)",
+    expect(buildApplyHref("https://x.dev/a?utm_source=own", "Role", "agenticroles.dev")).toBe("https://x.dev/a?utm_source=own");
+    expect(buildApplyHref("mailto:jobs@x.dev", "Agent Eng", "agenticroles.dev")).toBe(
+      "mailto:jobs@x.dev?subject=Application%3A%20Agent%20Eng%20(via%20agenticroles.dev)",
     );
-    expect(buildApplyHref("javascript:alert(1)", "Role", "agentjob.dev")).toBeNull();
-    expect(buildApplyHref("not a url", "Role", "agentjob.dev")).toBeNull();
+    expect(buildApplyHref("javascript:alert(1)", "Role", "agenticroles.dev")).toBeNull();
+    expect(buildApplyHref("not a url", "Role", "agenticroles.dev")).toBeNull();
   });
 });
 

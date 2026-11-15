@@ -1,4 +1,4 @@
-name: AgentJob Scheduled Tasks
+name: Agentic Roles Scheduled Tasks
 
 # Scheduling is owned by Vercel Cron (see vercel.json). This workflow is a
 # manual fallback only, so the endpoints are never triggered from two schedulers.

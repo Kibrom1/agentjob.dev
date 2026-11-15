@@ -1,4 +1,4 @@
-# AgentJobs.dev — Review & QA Agent Team
+# agenticroles.dev — Review & QA Agent Team
 
 This defines a second team of agents distinct from the build team (Architect /
 Frontend / QA Critic already used for implementation). This team's job is to
@@ -178,7 +178,7 @@ the default rather than reinventing it each time.
 - **DevOps / SRE Agent.** Owns deploy health, not code: Vercel project
   hygiene (the stray `agentjob-dev-43lw` / `ingestion` projects sitting
   around are exactly this agent's problem), env var correctness across
-  environments, domain/DNS (the `agentjobs.dev` custom domain currently
+  environments, domain/DNS (the `agenticroles.dev` custom domain currently
   resolving to an unrelated placeholder site is squarely this agent's
   finding), cron job monitoring via the Ops Agent's own report endpoint,
   and rollback readiness.

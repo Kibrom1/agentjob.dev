@@ -32,7 +32,7 @@ export function SourceAttribution({ applyUrl, company, slug }: SourceAttribution
       </h2>
       {source && (
         <p className="mt-2">
-          Application hosted on {source.provider}. Applications are handled by {company} there, not by AgentJob.
+          Application hosted on {source.provider}. Applications are handled by {company} there, not by Agentic Roles.
         </p>
       )}
       <p className="mt-2">

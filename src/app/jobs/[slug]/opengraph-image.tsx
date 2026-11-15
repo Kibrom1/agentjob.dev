@@ -2,7 +2,7 @@ import { getJobBySlug } from "@/lib/jobs";
 import { OG_CONTENT_TYPE, OG_SIZE, renderOgCard, renderSiteCard } from "@/lib/og-card";
 import { OG_LIMITS, truncateOgText } from "@/lib/og-text";
 
-export const alt = "Job on AgentJob";
+export const alt = "Job on Agentic Roles";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
