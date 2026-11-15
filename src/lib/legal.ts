@@ -7,9 +7,9 @@
 export const PLACEHOLDER_PREFIX = "[[PLACEHOLDER";
 
 export const legalConfig = {
-  companyName: "[[PLACEHOLDER: legal entity name]]",
-  contactEmail: "[[PLACEHOLDER: general contact and takedown email]]",
-  privacyEmail: "[[PLACEHOLDER: privacy and data-deletion email]]",
+  companyName: "Bright Steps Digital",
+  contactEmail: "brightstepsdigitalllc@gmail.com",
+  privacyEmail: "brightstepsdigitalllc@gmail.com",
   // Same value as the POSTAL_ADDRESS env var the digest requires (src/lib/env.ts).
   postalAddress: process.env.POSTAL_ADDRESS?.trim() || "[[PLACEHOLDER: postal address (also POSTAL_ADDRESS env var)]]",
   jurisdiction: "[[PLACEHOLDER: governing law and jurisdiction]]",
