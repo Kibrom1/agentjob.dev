@@ -58,7 +58,7 @@ begin
   );
   perform test_helpers.assert(
     has_function_privilege('service_role', 'public.activate_paid_job(text, boolean, integer)', 'execute')
-    and has_function_privilege('anon', 'public.search_jobs(text, text, public.workplace_type, text, integer, integer)', 'execute')
+    and has_function_privilege('anon', 'public.search_jobs(text, text, public.workplace_type, text, integer, integer, timestamptz)', 'execute')
     and has_function_privilege('anon', 'public.subscribe_to_digest(text, text)', 'execute'),
     'public RPCs executable'
   );
