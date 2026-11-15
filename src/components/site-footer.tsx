@@ -3,7 +3,9 @@ import { LegalValue } from "@/components/legal-page";
 import { LEGAL_LINKS, legalConfig } from "@/lib/legal";
 import { siteConfig } from "@/lib/site";
 
-const linkClass = "hover:text-zinc-900 hover:underline dark:hover:text-zinc-100";
+// 44px tap target on phones; compact from sm up where pointer input is typical.
+const linkClass =
+  "inline-flex min-h-11 items-center hover:text-zinc-900 hover:underline sm:min-h-0 dark:hover:text-zinc-100";
 
 export function SiteFooter() {
   const year = new Date().getUTCFullYear();
@@ -16,7 +18,7 @@ export function SiteFooter() {
             <span className="font-mono text-zinc-700 dark:text-zinc-300">{siteConfig.domain}</span> — {siteConfig.tagline}.
           </p>
           <nav aria-label="Legal">
-            <ul className="flex flex-wrap gap-x-5 gap-y-2">
+            <ul className="flex flex-wrap gap-x-5 gap-y-0 sm:gap-y-2">
               {LEGAL_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className={linkClass}>
@@ -38,8 +40,14 @@ export function SiteFooter() {
           </nav>
         </div>
         <p className="text-xs">
-          © {year} <LegalValue value={legalConfig.companyName} /> · <LegalValue value={legalConfig.postalAddress} /> ·{" "}
-          <LegalValue value={legalConfig.contactEmail} />
+          © {year} <LegalValue value={legalConfig.companyName} />
+          {legalConfig.postalAddress && (
+            <>
+              {" "}
+              · <LegalValue value={legalConfig.postalAddress} />
+            </>
+          )}{" "}
+          · <LegalValue value={legalConfig.contactEmail} />
         </p>
       </div>
     </footer>

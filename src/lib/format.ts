@@ -86,6 +86,21 @@ export type LocationSummary = {
 
 const LOCATION_SEPARATOR = /\s*[|;]\s*|\s+\/\s+/;
 
+const PAREN_MAX_KEPT = 12;
+
+/**
+ * Card-summary only: drops a trailing parenthetical that is long ("Remote-Friendly
+ * (Travel-Required)" becomes "Remote-Friendly") or that sits in a multi-location
+ * string. Short ones such as "Remote (US)" are kept. Never drops the whole text.
+ */
+function shortenParenthetical(value: string, multi: boolean): string {
+  const match = /^(.*?\S)\s*\(([^)]*)\)\s*$/.exec(value);
+  if (!match) return value;
+  const base = match[1] ?? value;
+  const inner = match[2] ?? "";
+  return multi || inner.length > PAREN_MAX_KEPT ? base : value;
+}
+
 /**
  * Condenses a scraped multi-location string ("A | B; C / D") into a primary
  * location plus a "+N more" count. Splits on `|`, `;` and a spaced slash
@@ -93,7 +108,7 @@ const LOCATION_SEPARATOR = /\s*[|;]\s*|\s+\/\s+/;
  * drops case-insensitive duplicates. Display-only: never write the result
  * back to storage.
  */
-export function formatLocationSummary(raw: string | null | undefined): LocationSummary {
+export function splitLocations(raw: string | null | undefined): string[] {
   const seen = new Set<string>();
   const parts: string[] = [];
   for (const piece of (raw ?? "").split(LOCATION_SEPARATOR)) {
@@ -103,13 +118,19 @@ export function formatLocationSummary(raw: string | null | undefined): LocationS
     seen.add(key);
     parts.push(part);
   }
+  return parts;
+}
+
+export function formatLocationSummary(raw: string | null | undefined): LocationSummary {
+  const parts = splitLocations(raw);
   const primary = parts[0] ?? "";
   const extra = Math.max(0, parts.length - 1);
+  const shortPrimary = shortenParenthetical(primary, extra > 0);
   return {
     primary,
     extra,
     full: parts.join(" · "),
-    display: extra > 0 ? `${primary} +${extra} more` : primary,
+    display: extra > 0 ? `${shortPrimary} +${extra} more` : shortPrimary,
   };
 }
 

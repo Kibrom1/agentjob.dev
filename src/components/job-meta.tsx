@@ -27,7 +27,7 @@ export function JobMeta({ location, workplaceType, jobType, salaryMin, salaryMax
       : []),
     ...(locationMentionsWorkplace ? [] : [{ key: "workplace", label: workplace }]),
     { key: "type", label: JOB_TYPE_LABELS[jobType] },
-    ...(salary ? [{ key: "salary", label: salary, emphasis: true }] : []),
+    salary ? { key: "salary", label: salary, emphasis: true } : { key: "salary", label: "Salary not listed" },
   ];
 
   return (

@@ -13,6 +13,9 @@ import { Constants } from "@/lib/database.types";
 import { siteConfig } from "@/lib/site";
 import { WORKPLACE_LABELS, type JobSearchFilters } from "@/lib/types";
 
+/** The inline digest prompt appears after this many cards. */
+const INLINE_DIGEST_AFTER = 10;
+
 type HomePageProps = {
   searchParams: Promise<RawSearchParams>;
 };
@@ -101,17 +104,29 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
           {result.jobs.length > 0 ? (
             <ol className="space-y-3">
-              {result.jobs.map((job) => (
-                <li key={job.id}>
-                  <JobCard
-                    job={job}
-                    categoryName={categoryNames.get(job.category_slug)}
-                    activeTag={filters.tag}
-                    hrefForTag={hrefForTag}
-                    now={result.fetchedAt}
-                  />
-                </li>
-              ))}
+              {result.jobs.flatMap((job, index) => {
+                const item = (
+                  <li key={job.id}>
+                    <JobCard
+                      job={job}
+                      categoryName={categoryNames.get(job.category_slug)}
+                      activeTag={filters.tag}
+                      hrefForTag={hrefForTag}
+                      now={result.fetchedAt}
+                    />
+                  </li>
+                );
+                // Inline digest prompt after the 10th card, only when more than 10 results are listed.
+                if (index === INLINE_DIGEST_AFTER - 1 && result.jobs.length > INLINE_DIGEST_AFTER) {
+                  return [
+                    item,
+                    <li key="inline-digest">
+                      <SubscribeCard source="website" idPrefix="feed-digest" anchorId="feed-digest" />
+                    </li>,
+                  ];
+                }
+                return [item];
+              })}
             </ol>
           ) : filtered ? (
             <EmptyState

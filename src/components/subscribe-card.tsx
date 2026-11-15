@@ -3,12 +3,14 @@ import { SubscribeForm } from "@/components/subscribe-form";
 type SubscribeCardProps = {
   source: "website" | "job-page";
   idPrefix: string;
+  /** Anchor id for the section. Only one card per page may use the default "subscribe". */
+  anchorId?: string;
 };
 
-export function SubscribeCard({ source, idPrefix }: SubscribeCardProps) {
+export function SubscribeCard({ source, idPrefix, anchorId = "subscribe" }: SubscribeCardProps) {
   return (
     <section
-      id="subscribe"
+      id={anchorId}
       aria-labelledby={`${idPrefix}-heading`}
       className="scroll-mt-20 rounded-xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-800 dark:bg-zinc-900/60"
     >

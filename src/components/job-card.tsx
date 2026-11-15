@@ -32,8 +32,10 @@ export function JobCard({ job, categoryName, activeTag, hrefForTag, now }: JobCa
           <div className="min-w-0">
             <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400">{job.company}</p>
             <h2 className="mt-0.5 text-base font-semibold tracking-tight text-zinc-900 sm:text-lg dark:text-zinc-50">
-              {/* Stretched link: the whole card is clickable; tag links sit above it (z-10). */}
-              <Link href={href} className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none">
+              {/* Stretched link: the whole card is clickable; tag links sit above it (z-10). The card ring
+                  follows only this link's keyboard focus; inner tags keep their own default focus outline. */}
+              <Link href={href} data-card-link=""
+                className="after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none">
                 {job.title}
               </Link>
             </h2>
@@ -71,7 +73,7 @@ export function JobCard({ job, categoryName, activeTag, hrefForTag, now }: JobCa
 
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-xl ring-accent-500 group-focus-within:ring-2"
+        className="pointer-events-none absolute inset-0 rounded-xl ring-accent-500 group-has-[[data-card-link]:focus-visible]:ring-2"
       />
     </article>
   );

@@ -1,5 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { formatLocationSummary as f } from "@/lib/format";
+import { formatLocationSummary as f, splitLocations } from "@/lib/format";
+
+describe("splitLocations", () => {
+  it("splits scraped multi-location strings into trimmed, deduped items", () => {
+    expect(splitLocations("Remote-Friendly (Travel-Required) | San Francisco, CA | Seattle, WA | New York City, NY")).toEqual([
+      "Remote-Friendly (Travel-Required)",
+      "San Francisco, CA",
+      "Seattle, WA",
+      "New York City, NY",
+    ]);
+    expect(splitLocations("A | a ; B")).toEqual(["A", "B"]);
+  });
+  it("returns [] for empty input and keeps single locations whole", () => {
+    expect(splitLocations(null)).toEqual([]);
+    expect(splitLocations("  ")).toEqual([]);
+    expect(splitLocations("Remote (US/Canada)")).toEqual(["Remote (US/Canada)"]);
+  });
+});
 
 describe("formatLocationSummary", () => {
   it("returns an empty summary for null, undefined, empty and separator-only input", () => {
@@ -45,7 +62,7 @@ describe("formatLocationSummary", () => {
     expect(f("Remote").display).toBe("Remote");
     expect(f("Remote - US | Remote - EU").display).toBe("Remote - US +1 more");
     expect(f("Remote-Friendly (Travel-Required) | NYC | SF | Austin").display).toBe(
-      "Remote-Friendly (Travel-Required) +3 more",
+      "Remote-Friendly +3 more",
     );
   });
   it("trims whitespace and newlines", () => {
@@ -53,6 +70,20 @@ describe("formatLocationSummary", () => {
   });
   it("handles non-ASCII locations", () => {
     expect(f("Zürich | 東京").display).toBe("Zürich +1 more");
+  });
+  it("drops a long parenthetical from the card display but keeps it in primary/full", () => {
+    const r = f("Remote-Friendly (Travel-Required) | San Francisco, CA | Seattle, WA | New York City, NY");
+    expect(r.display).toBe("Remote-Friendly +3 more");
+    expect(r.primary).toBe("Remote-Friendly (Travel-Required)");
+    expect(r.full).toContain("(Travel-Required)");
+    expect(f("Remote-Friendly (Travel-Required)").display).toBe("Remote-Friendly");
+  });
+  it("drops a short parenthetical only in multi-location strings", () => {
+    expect(f("Remote (US)").display).toBe("Remote (US)");
+    expect(f("Remote (US) | London").display).toBe("Remote +1 more");
+  });
+  it("never reduces a location to nothing", () => {
+    expect(f("(Remote)").display).toBe("(Remote)");
   });
   it("handles very long input", () => {
     const raw = Array.from({ length: 100 }, (_, i) => `City${i}`).join(" | ");

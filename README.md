@@ -27,7 +27,7 @@ Vercel Cron (daily) ─▶ /api/cron/digest   ─ Mondays; resumes unfinished ru
 Vercel Cron (daily) ─▶ /api/cron/maintenance ─▶ run_maintenance()           │
 Admin ── Basic auth ─▶ /admin (proxy.ts + per-action check, service role)   │
 Mail client ─ POST ──▶ /api/unsubscribe/[token] (RFC 8058 one-click)        │
-GitHub Actions (6h) ─▶ python -m agentjobs_ingest ─▶ upsert_ingested_jobs ──┤
+GitHub Actions (daily) ─▶ python -m agentjobs_ingest ─▶ upsert_ingested_jobs ──┤
 Ops agent (daily) ──▶ /api/ops/report (read-only, CRON_SECRET),            │
                        /api/jobs/recent (public) ─▶ drafts + a digest to you
                                                                             ▼
@@ -236,7 +236,7 @@ It needs Chromium: run `npx playwright install chromium` once.
 
 > 🔐 **Needs write access to the repository settings.**
 
-- **Workflow files:** `.github/workflows/ci.yml` (lint, tests, build, database and end-to-end suites) and `ingest.yml` (every 6 hours). `agentjob-scheduled-tasks.yml` is a manual-only fallback that triggers the digest or maintenance endpoints on demand; Vercel Cron owns the schedule. If they are not in the repository yet, copy them into `.github/workflows/`.
+- **Workflow files:** `.github/workflows/ci.yml` (lint, tests, build, database and end-to-end suites) and `ingest.yml` (daily at 11:15 UTC). `agentjob-scheduled-tasks.yml` is a manual-only fallback that triggers the digest or maintenance endpoints on demand; Vercel Cron owns the schedule. If they are not in the repository yet, copy them into `.github/workflows/`.
 - **Secrets:** add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` under Settings → Secrets and variables → Actions. Ingestion needs them.
 - **First run:** run **Ingest jobs** manually with `dry_run: true`, check the summary, then run it for real so the board isn't empty at launch.
 
