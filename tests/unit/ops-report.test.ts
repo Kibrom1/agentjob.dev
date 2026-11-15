@@ -48,7 +48,7 @@ describe("computeOpsFlags", () => {
 
   it("flags an empty board", () => {
     const flags = computeOpsFlags(baseStats({ live_jobs: 0 }), NOW);
-    expect(flags).toContainEqual(expect.objectContaining({ code: "board_empty", level: "warning" }));
+    expect(flags).toContainEqual(expect.objectContaining({ code: "no_live_jobs", level: "critical" }));
   });
 
   it("flags a source that has never logged a run", () => {
@@ -172,7 +172,7 @@ describe("renderOpsSummary", () => {
     const flags = computeOpsFlags(stats, NOW);
     const summary = renderOpsSummary(stats, flags, NOW);
     expect(summary).toContain("Live jobs: 0");
-    expect(summary).toContain("Needs attention:");
+    expect(summary).toContain("CRITICAL:");
     expect(summary).toContain("board will look empty");
   });
 

@@ -62,6 +62,7 @@ export async function fulfillCheckoutSession(
 
   if (session.currency !== PRICING.currency || session.amount_subtotal !== planSubtotal(plan)) {
     deps.log.error("[fulfillment] paid amount does not match plan; not publishing", {
+      alert: "amount_mismatch",
       session: session.id,
       plan,
       currency: session.currency,
@@ -90,7 +91,13 @@ export async function fulfillCheckoutSession(
 
   const job = await deps.activateJob(session.id, plan === "featured");
   if (job.status !== "active") {
-    deps.log.warn("[fulfillment] paid session could not activate job", { session: session.id, status: job.status });
+    // Money was taken for a job that cannot go live (e.g. rejected): needs a human. Structured for log alerts.
+    deps.log.error("[fulfillment] paid session could not activate job", {
+      alert: "not_activatable",
+      session: session.id,
+      job: job.id,
+      status: job.status,
+    });
     return "not_activatable";
   }
 
