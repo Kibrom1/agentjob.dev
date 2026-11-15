@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { subscribeToDigest, type SubscribeState } from "@/app/actions";
+import { track } from "@/lib/analytics";
 
 type SubscribeFormProps = {
   source: "website" | "job-page";
@@ -16,17 +17,43 @@ export function SubscribeForm({ source, idPrefix }: SubscribeFormProps) {
   const emailId = `${idPrefix}-email`;
   const messageId = `${idPrefix}-message`;
 
-  if (state.status === "success") {
-    return (
-      <p role="status" className="rounded-lg bg-accent-50 px-3 py-2.5 text-sm text-accent-700 dark:bg-accent-950 dark:text-accent-400">
-        {state.message}
-      </p>
-    );
-  }
+  const counted = state.status === "success" && state.countable;
+  useEffect(() => {
+    if (counted) track("digest_signup", { source });
+  }, [counted, source]);
+
+  const succeeded = state.status === "success";
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  // The submit button unmounts on success, so move focus to the persistent status region.
+  useEffect(() => {
+    if (succeeded) statusRef.current?.focus();
+  }, [succeeded]);
 
   const hasError = state.status === "error";
 
   return (
+    <div>
+      {/* Persistent live region: present before the message arrives so screen readers announce it. */}
+      <div
+        ref={statusRef}
+        role="status"
+        aria-live="polite"
+        tabIndex={-1}
+        className={
+          succeeded
+            ? "rounded-lg bg-accent-50 px-3 py-2.5 text-sm text-accent-700 dark:bg-accent-950 dark:text-accent-400"
+            : "sr-only"
+        }
+      >
+        {succeeded ? (
+          <>
+            <p className="font-semibold">Check your inbox</p>
+            <p className="mt-1">{state.message}</p>
+          </>
+        ) : null}
+      </div>
+      {!succeeded && (
     <form action={formAction} className="space-y-2" noValidate>
       <input type="hidden" name="source" value={source} />
       {/* Honeypot: invisible to people, tempting to bots. */}
@@ -51,10 +78,10 @@ export function SubscribeForm({ source, idPrefix }: SubscribeFormProps) {
           defaultValue={hasError ? state.email : ""}
           aria-invalid={hasError || undefined}
           aria-describedby={hasError ? messageId : undefined}
-          className={`h-10 w-full min-w-0 rounded-lg sm:flex-1 lg:flex-none border bg-white px-3 text-sm placeholder:text-zinc-400 focus:ring-4 focus:outline-none dark:bg-zinc-900 ${
+          className={`h-10 w-full min-w-0 rounded-lg sm:flex-1 lg:flex-none border bg-white px-3 text-sm placeholder:text-zinc-500 focus:ring-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 dark:focus-visible:outline-accent-400 dark:bg-zinc-900 dark:placeholder:text-zinc-400 ${
             hasError
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/15"
-              : "border-zinc-300 focus:border-accent-500 focus:ring-accent-500/15 dark:border-zinc-700"
+              ? "border-red-600 focus:border-red-600 focus:ring-red-500/15"
+              : "border-zinc-500 focus:border-accent-500 focus:ring-accent-500/15 dark:border-zinc-500"
           }`}
         />
         <button
@@ -71,5 +98,7 @@ export function SubscribeForm({ source, idPrefix }: SubscribeFormProps) {
         </p>
       )}
     </form>
+      )}
+    </div>
   );
 }

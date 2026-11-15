@@ -315,8 +315,38 @@ export type Database = {
         };
         Relationships: [];
       };
+      employer_waitlist: {
+        Row: {
+          company: string;
+          created_at: string;
+          email: string;
+          id: string;
+          role_note: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          company: string;
+          created_at?: string;
+          email: string;
+          id?: string;
+          role_note?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          company?: string;
+          created_at?: string;
+          email?: string;
+          id?: string;
+          role_note?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       subscribers: {
         Row: {
+          confirm_token: string;
+          confirmation_sent_at: string | null;
+          confirmed_at: string | null;
           created_at: string;
           email: string;
           id: string;
@@ -325,6 +355,9 @@ export type Database = {
           unsubscribed_at: string | null;
         };
         Insert: {
+          confirm_token?: string;
+          confirmation_sent_at?: string | null;
+          confirmed_at?: string | null;
           created_at?: string;
           email: string;
           id?: string;
@@ -333,6 +366,9 @@ export type Database = {
           unsubscribed_at?: string | null;
         };
         Update: {
+          confirm_token?: string;
+          confirmation_sent_at?: string | null;
+          confirmed_at?: string | null;
           created_at?: string;
           email?: string;
           id?: string;
@@ -408,6 +444,10 @@ export type Database = {
         };
         Returns: string;
       };
+      confirm_digest_subscription: {
+        Args: { p_token: string };
+        Returns: boolean;
+      };
       expire_jobs: {
         Args: Record<PropertyKey, never>;
         Returns: {
@@ -433,6 +473,14 @@ export type Database = {
           email: string;
           subscriber_id: string;
           unsubscribe_token: string;
+        }[];
+      };
+      request_digest_confirmation: {
+        Args: { p_cooldown_seconds?: number; p_email: string; p_source?: string };
+        Returns: {
+          confirm_token: string | null;
+          should_send: boolean;
+          unsubscribe_token: string | null;
         }[];
       };
       record_digest_deliveries: {
@@ -489,7 +537,15 @@ export type Database = {
         Returns: boolean;
       };
       upsert_ingested_jobs: {
-        Args: { p_close_missing?: boolean; p_jobs: Json; p_source_name: string };
+        Args: {
+          p_allow_empty?: boolean;
+          p_close_missing?: boolean;
+          p_fetched_count?: number;
+          p_force_close?: boolean;
+          p_jobs: Json;
+          p_keep_ids?: string[];
+          p_source_name: string;
+        };
         Returns: Json;
       };
     };

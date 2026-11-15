@@ -32,6 +32,7 @@ def _parser() -> argparse.ArgumentParser:
     run_cmd.add_argument("--dry-run", action="store_true", help="fetch and classify without writing to the database")
     run_cmd.add_argument("--source", action="append", default=[], metavar="PROVIDER:BOARD", help="limit to these sources")
     run_cmd.add_argument("--strict", action="store_true", help="treat unknown boards (404) as failures")
+    run_cmd.add_argument("--force-close", action="store_true", help="bypass the mass-close cap (use after confirming a large drop is real)")
     run_cmd.add_argument("--output", type=Path, help="also write the JSON summary to this file")
 
     validate_cmd = commands.add_parser("validate-config", help="check the sources file and exit")
@@ -75,7 +76,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         with build_client() as client:
-            reports = run(sources, SOURCES, client, database)
+            reports = run(sources, SOURCES, client, database, force_close=args.force_close)
     finally:
         if database is not None:
             database.close()
@@ -86,7 +87,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "totals": {
             "fetched": sum(report.fetched for report in reports),
             "relevant": sum(report.relevant for report in reports),
-            "failed_sources": sum(report.status in {"fetch_failed", "db_failed"} for report in reports),
+            "failed_sources": sum(report.status in {"fetch_failed", "db_failed", "close_skipped"} for report in reports),
         },
     }
     text = json.dumps(summary, indent=2, default=str)

@@ -9,7 +9,7 @@ import { JOB_TYPE_LABELS, WORKPLACE_LABELS, type Category } from "@/lib/types";
 const INITIAL: AdminCreateState = { status: "idle" };
 
 const inputClass =
-  "block h-9 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm focus:border-accent-500 focus:ring-4 focus:ring-accent-500/15 focus:outline-none dark:border-zinc-700 dark:bg-zinc-900";
+  "block h-9 w-full rounded-lg border border-zinc-500 bg-white px-3 text-sm placeholder:text-zinc-500 focus:border-accent-500 focus:ring-4 focus:ring-accent-500/15 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 dark:focus-visible:outline-accent-400 dark:border-zinc-500 dark:bg-zinc-900 dark:placeholder:text-zinc-400";
 
 type TextField = { name: PostingField; label: string; placeholder?: string; type?: string };
 

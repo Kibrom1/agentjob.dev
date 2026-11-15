@@ -38,6 +38,30 @@ describe.each(PAGES)("$path", ({ path, load, title }) => {
   });
 });
 
+describe("privacy disclosures", () => {
+  it("discloses hashed-IP rate limiting, Stripe customer id, retention, erasure and the takedown SLA", async () => {
+    const mod = await import("@/app/privacy/page");
+    const html = renderToStaticMarkup(createElement(mod.default));
+    expect(html).toContain("hash of your IP address");
+    expect(html).toContain("Stripe customer id");
+    expect(html).toContain("90 days after you");
+    expect(html).toContain("12 months");
+    expect(html).toContain("24 months");
+    expect(html).toContain(`within ${legalConfig.takedownResponse}`);
+    expect(html).toContain("link to the original posting");
+    expect(html).toContain("erase your data");
+    // Retention is now stated; only the legal-basis wording stays a placeholder.
+    expect(html).not.toContain("retention periods for employer records");
+  });
+
+  it("states the takedown SLA on terms and about", async () => {
+    for (const path of ["@/app/terms/page", "@/app/about/page"]) {
+      const mod = await import(path);
+      expect(renderToStaticMarkup(createElement(mod.default))).toContain(legalConfig.takedownResponse);
+    }
+  });
+});
+
 describe("footer and sitemap", () => {
   it("links the four legal pages, a contact mailto and a Legal nav", () => {
     expect(LEGAL_LINKS.map((l) => l.href)).toEqual(["/terms", "/privacy", "/refund", "/about"]);

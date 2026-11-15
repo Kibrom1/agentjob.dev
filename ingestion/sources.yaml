@@ -42,7 +42,5 @@ sources:
     board: llamaindex
     company: LlamaIndex
     company_url: https://www.llamaindex.ai
-  - provider: lever
-    board: mistral
-    company: Mistral AI
-    company_url: https://mistral.ai
+  # Mistral AI removed: jobs.lever.co/mistral returns 404 (checked 2026-11-15) and --strict
+  # would fail every run. Re-add once the correct board token is known.

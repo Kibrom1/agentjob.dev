@@ -1,16 +1,17 @@
 // DRAFT, NOT LEGAL ADVICE. Factual description derived from the code; every
 // legal specific is a [[PLACEHOLDER]] in src/lib/legal.ts. Needs lawyer review.
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/page-metadata";
 import { LegalPage, LegalValue } from "@/components/legal-page";
 import { legalConfig } from "@/lib/legal";
 import { PRICING, formatUsd } from "@/lib/posting/pricing";
 import { siteConfig } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms of service",
   description: `The terms for using ${siteConfig.domain} and posting jobs on it.`,
-  alternates: { canonical: "/terms" },
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (
@@ -52,7 +53,8 @@ export default function TermsPage() {
       <h2>Removal requests</h2>
       <p>
         If you are an employer and want an aggregated listing corrected or removed, contact us using the details on the{" "}
-        <a href="/about">about page</a> and we will review the request.
+        <a href="/about">about page</a>. We act on removal requests within {legalConfig.takedownResponse}, and a
+        company that asks to be removed is not collected again.
       </p>
 
       <h2>Disclaimers and liability</h2>

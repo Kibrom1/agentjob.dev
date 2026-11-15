@@ -1,16 +1,20 @@
 "use server";
 
 import { z } from "zod";
+import { requestDigestSignup } from "@/lib/digest/signup";
+import { createSignupDeps } from "@/lib/digest/signup-deps";
+import { getEmailEnv, isEmailConfigured } from "@/lib/env";
 import { consumeRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
-import { getPublicDbClient } from "@/lib/supabase/server";
+import { siteConfig } from "@/lib/site";
 import { emailSchema } from "@/lib/validation";
 
 export type SubscribeState =
   | { status: "idle" }
-  | { status: "success"; message: string }
+  | { status: "success"; message: string; /** False for honeypot hits so analytics ignore bots. */ countable: boolean }
   | { status: "error"; message: string; email: string };
 
-const SUCCESS_MESSAGE = "You're on the list. Watch your inbox for the weekly digest.";
+const SUCCESS_MESSAGE =
+  "We sent a confirmation link to that address. Click it and the weekly digest starts. If it doesn't arrive in a few minutes, check spam or submit the form again.";
 const GENERIC_ERROR = "We couldn't save your email right now. Please try again in a minute.";
 
 const sourceSchema = z.enum(["website", "job-page"]).catch("website");
@@ -21,15 +25,19 @@ function readString(formData: FormData, key: string): string {
 }
 
 /**
- * Newsletter signup. Always answers the same way for new and existing
- * addresses (the RPC is enumeration-safe), and silently accepts submissions
- * that fill the honeypot field so bots get no signal.
+ * Newsletter signup (double opt-in). The address is stored as pending and a
+ * confirmation email with the newest roles is sent; only a click on its link
+ * makes the address eligible for the digest. Resubmitting resends the email
+ * (per-address cooldown in the database, per-network limit here). The answer
+ * is identical for new, pending, confirmed and unsubscribed addresses, so the
+ * form cannot be used to probe who is on the list. Submissions that fill the
+ * honeypot field are silently accepted so bots get no signal.
  */
 export async function subscribeToDigest(_previous: SubscribeState, formData: FormData): Promise<SubscribeState> {
   const rawEmail = readString(formData, "email");
 
   if (readString(formData, "website") !== "") {
-    return { status: "success", message: SUCCESS_MESSAGE };
+    return { status: "success", message: SUCCESS_MESSAGE, countable: false };
   }
 
   const parsed = emailSchema.safeParse(rawEmail);
@@ -47,24 +55,25 @@ export async function subscribeToDigest(_previous: SubscribeState, formData: For
     return { status: "error", message: "Too many signups from your network. Please try again later.", email: rawEmail };
   }
 
-  try {
-    const { error } = await getPublicDbClient().rpc("subscribe_to_digest", {
-      p_email: parsed.data,
-      p_source: source,
-    });
+  if (!isEmailConfigured()) {
+    console.error("[subscribe] email is not configured; cannot send confirmation");
+    return { status: "error", message: GENERIC_ERROR, email: rawEmail };
+  }
 
-    if (error) {
-      if (error.code === "22023") {
-        return { status: "error", message: "Enter a valid email address", email: rawEmail };
-      }
-      console.error("[subscribe] rpc failed", { code: error.code, message: error.message });
-      return { status: "error", message: GENERIC_ERROR, email: rawEmail };
-    }
+  try {
+    await requestDigestSignup(
+      createSignupDeps(),
+      { siteUrl: siteConfig.url.toString(), postalAddress: getEmailEnv().POSTAL_ADDRESS },
+      { email: parsed.data, source },
+    );
   } catch (cause) {
-    // Missing configuration, network failure or timeout.
+    if (typeof cause === "object" && cause !== null && "code" in cause && cause.code === "22023") {
+      return { status: "error", message: "Enter a valid email address", email: rawEmail };
+    }
+    // Missing configuration, network failure, timeout or a provider error.
     console.error("[subscribe] request failed", cause);
     return { status: "error", message: GENERIC_ERROR, email: rawEmail };
   }
 
-  return { status: "success", message: SUCCESS_MESSAGE };
+  return { status: "success", message: SUCCESS_MESSAGE, countable: true };
 }

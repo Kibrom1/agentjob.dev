@@ -69,11 +69,14 @@ class FetchResult:
 @dataclass(slots=True)
 class SourceReport:
     source_name: str
-    status: Literal["ok", "not_found", "fetch_failed", "db_failed", "dry_run", "no_relevant_jobs"] = "ok"
+    status: Literal["ok", "not_found", "fetch_failed", "db_failed", "dry_run", "no_relevant_jobs", "close_skipped"] = "ok"
     fetched: int = 0
     malformed: int = 0
     relevant: int = 0
     rejected_by_normalizer: int = 0
+    #: external ids of postings the normalizer rejected: still listed upstream, so
+    #: 'unknown' rather than 'gone' and never closed by this run.
+    unknown_ids: list[str] = field(default_factory=list)
     closed_missing: bool = False
     database: dict[str, object] = field(default_factory=dict)
     error: str | None = None

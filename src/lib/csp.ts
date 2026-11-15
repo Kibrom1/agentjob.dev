@@ -12,6 +12,11 @@
  * - img-src 'self' data: https:   company logos/avatars may come from any https host.
  * - font-src 'self' data:         next/font self-hosts fonts.
  * - connect-src 'self'            fetch/RSC only to our own origin (dev adds ws: for HMR).
+ *                                 Vercel Web Analytics (@vercel/analytics) is first-party in
+ *                                 production: script from /_vercel/insights/script.js and beacons to
+ *                                 /_vercel/insights/*, so 'self' already covers it and no extra
+ *                                 origin is allowed. Only `next dev` loads the debug script from
+ *                                 va.vercel-scripts.com; that is a report-only violation in dev.
  * - object-src 'none'             no plugins.
  * - frame-ancestors 'none'        no embedding (matches X-Frame-Options: DENY).
  * - form-action 'self' https://checkout.stripe.com  Stripe Checkout redirect after a form POST.

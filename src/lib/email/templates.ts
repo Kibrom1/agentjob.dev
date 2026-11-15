@@ -142,3 +142,76 @@ export function postingConfirmationEmail(input: PostingConfirmationInput): Outbo
     "Need a change? Reply to this email and we will update the listing.\n";
   return { to: input.to, subject, html, text, tags: [{ name: "category", value: "posting_confirmation" }] };
 }
+
+export type DigestConfirmationInput = {
+  to: string;
+  /** Newest live roles, shown as the welcome content. */
+  jobs: DigestJob[];
+  siteUrl: string;
+  confirmUrl: string;
+  unsubscribePageUrl: string;
+  unsubscribePostUrl: string;
+  postalAddress: string;
+};
+
+/**
+ * Double opt-in email: sent once per signup request, links to the confirm page
+ * and previews the five newest roles so the signup pays off immediately.
+ * Carries the unsubscribe link and postal address so a person who never
+ * signed up can opt out and the message stays CAN-SPAM compliant.
+ */
+export function digestConfirmationEmail(input: DigestConfirmationInput): OutboundEmail {
+  const subject = "Confirm your Agentic Roles weekly digest";
+  const campaign = "welcome";
+  const jobs = input.jobs.slice(0, 5);
+
+  const htmlItems = jobs
+    .map((job) => {
+      const url = withUtm(new URL(`/jobs/${job.slug}`, input.siteUrl).toString(), campaign);
+      return (
+        '<tr><td style="padding:10px 0;border-top:1px solid #f4f4f5">' +
+        `<div style="font-size:13px;color:#52525b">${escapeHtml(job.company)}</div>` +
+        `<a href="${escapeHtml(url)}" style="display:block;margin-top:2px;font-size:15px;font-weight:600;color:#18181b;text-decoration:none">${escapeHtml(job.title)}</a>` +
+        "</td></tr>"
+      );
+    })
+    .join("");
+
+  const html =
+    WRAPPER_START +
+    '<p style="margin:0;font-family:ui-monospace,Menlo,monospace;font-size:12px;letter-spacing:.08em;color:#047857;text-transform:uppercase">Agentic Roles weekly</p>' +
+    `<h1 style="margin:6px 0 8px;font-size:22px">Confirm your email</h1>` +
+    '<p style="margin:0 0 16px;color:#52525b;font-size:14px">Click the button to start getting the weekly email with new roles for engineers building AI agents. If you did not ask for this, ignore this message and nothing will be sent.</p>' +
+    `<p style="margin:0 0 20px"><a href="${escapeHtml(input.confirmUrl)}" style="display:inline-block;background:#059669;color:#fff;border-radius:8px;padding:10px 16px;font-size:14px;text-decoration:none">Confirm subscription</a></p>` +
+    (jobs.length > 0
+      ? '<p style="margin:0 0 4px;font-size:13px;font-weight:600">The newest roles right now</p>' +
+        `<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${htmlItems}</table>`
+      : "") +
+    '<hr style="border:none;border-top:1px solid #e4e4e7;margin:24px 0 12px">' +
+    '<p style="margin:0;font-size:12px;color:#71717a">You are receiving this because this address was entered at agenticroles.dev. ' +
+    `<a href="${escapeHtml(input.unsubscribePageUrl)}" style="color:#71717a">Unsubscribe</a></p>` +
+    `<p style="margin:6px 0 0;font-size:12px;color:#a1a1aa">${escapeHtml(input.postalAddress)}</p>` +
+    WRAPPER_END;
+
+  const textItems = jobs
+    .map((job) => `${job.title} — ${job.company}\n${withUtm(new URL(`/jobs/${job.slug}`, input.siteUrl).toString(), campaign)}`)
+    .join("\n\n");
+
+  const text =
+    `${subject}\n\nConfirm your email to start getting the weekly digest of new roles for engineers building AI agents:\n${input.confirmUrl}\n\n` +
+    "If you did not ask for this, ignore this message and nothing will be sent.\n\n" +
+    (jobs.length > 0 ? `The newest roles right now:\n\n${textItems}\n\n` : "") +
+    `Unsubscribe: ${input.unsubscribePageUrl}\n${input.postalAddress}\n`;
+
+  return {
+    to: input.to,
+    subject,
+    html,
+    text,
+    headers: {
+      "List-Unsubscribe": `<${input.unsubscribePostUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
+    tags: [{ name: "category", value: "digest_confirmation" }],
+  };
+}

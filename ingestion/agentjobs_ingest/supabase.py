@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 import httpx
@@ -38,9 +39,34 @@ class IngestionDatabase:
     def close(self) -> None:
         self._client.close()
 
-    def upsert(self, source_name: str, jobs: list[NormalizedJob], close_missing: bool) -> dict[str, Any]:
+    def upsert(
+        self,
+        source_name: str,
+        jobs: list[NormalizedJob],
+        close_missing: bool,
+        *,
+        allow_empty: bool = False,
+        force_close: bool = False,
+        keep_ids: Sequence[str] = (),
+        fetched_count: int = 0,
+    ) -> dict[str, Any]:
         if len(jobs) > MAX_BATCH:
             raise ValueError(f"at most {MAX_BATCH} jobs per call")
+        body: dict[str, Any] = {
+            "p_source_name": source_name,
+            "p_jobs": [job.to_payload() for job in jobs],
+            "p_close_missing": close_missing,
+        }
+        # Only sent when set, so a default run still works against a database
+        # that has not yet received the close-safety migration.
+        if allow_empty:
+            body["p_allow_empty"] = True
+        if force_close:
+            body["p_force_close"] = True
+        if keep_ids:
+            body["p_keep_ids"] = list(keep_ids)
+        if fetched_count > 0:
+            body["p_fetched_count"] = fetched_count
         response = self._client.post(
             f"{self._settings.supabase_url}/rest/v1/rpc/upsert_ingested_jobs",
             headers={
@@ -49,11 +75,7 @@ class IngestionDatabase:
                 "Accept": "application/json",
                 "User-Agent": USER_AGENT,
             },
-            json={
-                "p_source_name": source_name,
-                "p_jobs": [job.to_payload() for job in jobs],
-                "p_close_missing": close_missing,
-            },
+            json=body,
         )
         if response.status_code >= 400:
             code = None

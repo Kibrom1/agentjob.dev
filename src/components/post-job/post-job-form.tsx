@@ -46,10 +46,10 @@ const EMPTY_VALUES: Values = {
 const INITIAL_STATE: PostJobState = { status: "idle" };
 
 const inputClass = (hasError: boolean) =>
-  `block h-10 w-full rounded-lg border bg-white px-3 text-sm placeholder:text-zinc-400 focus:ring-4 focus:outline-none dark:bg-zinc-900 ${
+  `block h-10 w-full rounded-lg border bg-white px-3 text-sm placeholder:text-zinc-500 focus:ring-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-700 dark:focus-visible:outline-accent-400 dark:bg-zinc-900 dark:placeholder:text-zinc-400 ${
     hasError
-      ? "border-red-500 focus:border-red-500 focus:ring-red-500/15"
-      : "border-zinc-300 focus:border-accent-500 focus:ring-accent-500/15 dark:border-zinc-700"
+      ? "border-red-600 focus:border-red-600 focus:ring-red-500/15"
+      : "border-zinc-500 focus:border-accent-500 focus:ring-accent-500/15 dark:border-zinc-500"
   }`;
 
 function readDraft(): Partial<Values> | null {

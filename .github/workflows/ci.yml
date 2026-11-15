@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ["v*"]
   pull_request:
 
 concurrency:
@@ -26,6 +27,24 @@ jobs:
       - run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
+
+  # Launch placeholders ([[PLACEHOLDER ...]] legal text) still exist on purpose, so
+  # this must not break day-to-day CI. It is a warning on branches and PRs (visible
+  # as an annotation, job stays green) and a hard failure only on a release tag
+  # (v*), so a tagged release cannot ship with unfilled legal copy.
+  launch-placeholders:
+    name: Launch placeholders (warn; fail on release tags)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for unfilled placeholders
+        run: |
+          if ./scripts/check-launch-placeholders.sh; then exit 0; fi
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "::error::Unfilled launch placeholders on a release tag."
+            exit 1
+          fi
+          echo "::warning::Unfilled launch placeholders remain in src/ (non-blocking until a v* release tag)."
 
   ingestion:
     name: Ingestion (pytest)

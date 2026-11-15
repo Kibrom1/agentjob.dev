@@ -74,7 +74,7 @@ begin
     'public.attach_checkout_session(uuid, text)',
     'public.mark_checkout_expired(text)',
     'public.run_maintenance()',
-    'public.upsert_ingested_jobs(text, jsonb, boolean)',
+    'public.upsert_ingested_jobs(text, jsonb, boolean, boolean, boolean, text[], integer)',
     'public.begin_digest_run(date)',
     'public.next_digest_recipients(uuid, integer)',
     'public.record_digest_deliveries(uuid, jsonb)',
@@ -407,12 +407,14 @@ declare
   v_ids      uuid[];
   v_recorded integer;
 begin
-  insert into public.subscribers (email, created_at) values
-    ('a@digest.test', now() - interval '2 days'),
-    ('b@digest.test', now() - interval '2 days'),
-    ('c@digest.test', now() - interval '2 days');
-  insert into public.subscribers (email, created_at, unsubscribed_at) values
-    ('gone@digest.test', now() - interval '2 days', now() - interval '1 day');
+  insert into public.subscribers (email, created_at, confirmed_at) values
+    ('a@digest.test', now() - interval '2 days', now() - interval '2 days'),
+    ('b@digest.test', now() - interval '2 days', now() - interval '2 days'),
+    ('c@digest.test', now() - interval '2 days', now() - interval '2 days');
+  insert into public.subscribers (email, created_at, confirmed_at, unsubscribed_at) values
+    ('gone@digest.test', now() - interval '2 days', now() - interval '2 days', now() - interval '1 day');
+  -- pending (never confirmed) subscribers must not receive the digest
+  insert into public.subscribers (email, created_at) values ('pending@digest.test', now() - interval '2 days');
 
   set local role service_role;
 
@@ -426,7 +428,7 @@ begin
 
   reset role;
   update public.digest_runs set started_at = now() - interval '1 day' where id = v_run.id;
-  insert into public.subscribers (email, created_at) values ('late@digest.test', now());
+  insert into public.subscribers (email, created_at, confirmed_at) values ('late@digest.test', now(), now());
   set local role service_role;
 
   perform test_helpers.assert(
