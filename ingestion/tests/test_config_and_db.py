@@ -97,6 +97,18 @@ def test_upsert_posts_rpc_payload():
     assert body["p_close_missing"] is True
     assert body["p_jobs"][0]["external_id"] == "1"
     assert body["p_jobs"][0]["tags"] == ["LangGraph"]
+    # Close-safety args are omitted unless set, keeping default calls compatible.
+    assert not {"p_allow_empty", "p_force_close", "p_keep_ids", "p_fetched_count"} & body.keys()
+
+
+@respx.mock
+def test_upsert_sends_close_safety_args_when_set():
+    route = respx.post("https://x.supabase.co/rest/v1/rpc/upsert_ingested_jobs").respond(json={"closed": 0, "errors": []})
+    db = IngestionDatabase(Settings("https://x.supabase.co", "sb_secret_abc"), httpx.Client())
+    db.upsert("lever:acme", [], close_missing=True, allow_empty=True, force_close=True, keep_ids=["7"], fetched_count=4)
+    body = json.loads(route.calls.last.request.content)
+    assert body["p_allow_empty"] is True and body["p_force_close"] is True
+    assert body["p_keep_ids"] == ["7"] and body["p_fetched_count"] == 4
 
 
 @respx.mock

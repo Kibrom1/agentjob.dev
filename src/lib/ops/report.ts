@@ -53,6 +53,12 @@ export function computeOpsFlags(stats: AdminStats, now: Date = new Date()): OpsF
         code: "ingestion_failed",
         message: `${run.source_name}: last run ${run.status}${run.error ? ` — ${run.error}` : ""}.`,
       });
+    } else if (run.status === "close_skipped") {
+      flags.push({
+        level: "warning",
+        code: "ingestion_close_skipped",
+        message: `${run.source_name}: mass-close rail tripped, nothing was closed${run.error ? ` — ${run.error}` : ""}. Confirm the drop is real, then re-run ingestion with force_close.`,
+      });
     } else if (Number.isFinite(ageMs) && ageMs > INGESTION_STALE_AFTER_MS) {
       flags.push({
         level: "warning",

@@ -74,7 +74,7 @@ begin
     'public.attach_checkout_session(uuid, text)',
     'public.mark_checkout_expired(text)',
     'public.run_maintenance()',
-    'public.upsert_ingested_jobs(text, jsonb, boolean)',
+    'public.upsert_ingested_jobs(text, jsonb, boolean, boolean, boolean, text[], integer)',
     'public.begin_digest_run(date)',
     'public.next_digest_recipients(uuid, integer)',
     'public.record_digest_deliveries(uuid, jsonb)',

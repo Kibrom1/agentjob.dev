@@ -81,6 +81,30 @@ describe("computeOpsFlags", () => {
     );
   });
 
+  it("flags a tripped mass-close rail", () => {
+    const stats = baseStats({
+      ingestion_last_runs: [
+        {
+          source_name: "greenhouse:acme",
+          status: "close_skipped",
+          fetched: 12,
+          relevant: 0,
+          inserted: 0,
+          updated: 0,
+          skipped: 0,
+          failed: 0,
+          closed: 0,
+          error: "mass-close rail: would have closed 40 live job(s)",
+          started_at: "2026-09-15T06:00:00Z",
+          finished_at: "2026-09-15T06:00:05Z",
+        },
+      ],
+    });
+    expect(computeOpsFlags(stats, NOW)).toContainEqual(
+      expect.objectContaining({ code: "ingestion_close_skipped", level: "warning" }),
+    );
+  });
+
   it("flags a source that has gone quiet even though its last run succeeded", () => {
     const stats = baseStats({
       ingestion_last_runs: [
