@@ -35,12 +35,19 @@ def test_company_boilerplate_alone_does_not_qualify():
     body = "Anthropic builds large language models like Claude. You will own billing and invoicing."
     result = assess_relevance("Software Engineer, Payments", body)
     assert not result.relevant
-    assert result.score < 6
+    assert result.score < 8
 
 
 def test_body_signals_qualify_an_ai_titled_role():
-    body = "Ship LLM features, build agents, RAG pipelines, evals and fine-tuning workflows."
+    body = "Ship LLM features, build agents with tool calling, RAG pipelines, evals and fine-tuning workflows."
     assert assess_relevance("Applied AI Engineer", body).relevant
+
+
+def test_single_agent_mention_does_not_qualify_an_ai_titled_role():
+    body = "Ship LLM features, build agents, RAG pipelines, evals and fine-tuning workflows."
+    result = assess_relevance("Applied AI Engineer", body)
+    assert not result.relevant
+    assert result.reason == "insufficient agent evidence"
 
 
 def test_body_signals_qualify_generic_title_with_strong_evidence():
@@ -87,3 +94,52 @@ def test_tags_are_curated_ordered_and_capped():
     assert len(tags) == 12
     assert tags[:3] == ["LangGraph", "LangChain", "LlamaIndex"]
     assert len(set(tag.lower() for tag in tags)) == len(tags)
+
+
+BOILER = "Anthropic builds large language models like Claude and AI agents. Experience with LLM, evals, inference, openai."
+REAL = "Build agentic workflows: agents with tool use, MCP servers, LLM routing and evals."
+
+
+@pytest.mark.parametrize(
+    ("title", "boiler_ok", "real_ok"),
+    [
+        ("Application Security Engineer", False, False),
+        ("Senior Engineer, Bioinformatics", False, False),
+        ("Research Scientist, Discovery Engineering", False, False),
+        ("ML Data Scientist, Consumer Forecasting", False, False),
+        ("Partner Applied AI Engineer, Oracle ISV", False, False),
+        ("Software Engineer, Agents", True, True),
+        ("Applied AI Engineer", False, True),
+        ("Senior Backend Engineer", False, True),
+        ("Research Engineer, Inference", False, True),
+    ],
+)
+def test_wp5_before_after_table(title, boiler_ok, real_ok):
+    assert assess_relevance(title, BOILER).relevant is boiler_ok
+    assert assess_relevance(title, REAL).relevant is real_ok
+
+
+def test_domain_deny_reasons():
+    assert assess_relevance("Application Security Engineer", REAL).reason == "domain title"
+
+
+def test_domain_deny_does_not_apply_when_title_has_agent_term():
+    assert assess_relevance("Agent Security Engineer", "").relevant
+    assert assess_relevance("LLM Security Engineer", "").relevant
+
+
+def test_domain_deny_uses_word_boundaries():
+    # "heads"/"loads"/"adapters" must not trip the `ads?` deny term
+    assert assess_relevance("Backend Engineer, Adapters", REAL).relevant
+
+
+def test_partner_titles_are_excluded():
+    assert not assess_relevance("Partner Engineer, Agents", REAL).relevant
+
+
+@pytest.mark.parametrize(
+    "title",
+    ["Software Engineer, LLM Platform", "AI Engineer, MCP", "Staff Engineer, Agentic Systems", "Research Engineer, LLM Inference"],
+)
+def test_regression_core_title_terms_still_pass_with_empty_body(title):
+    assert assess_relevance(title, "").relevant

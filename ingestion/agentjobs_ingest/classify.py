@@ -3,8 +3,9 @@
 Relevance needs two independent signals so generic "AI" or go-to-market roles
 stay off the board:
   1. the title names an engineering/research role (and not a sales/recruiting one)
-  2. the posting is about LLM agents: a core term in the title, or enough
-     distinct core/supporting terms in the body.
+  2. the posting is about LLM agents: a core term in the title, or (for
+     non-domain titles) at least two distinct agent-family terms plus enough
+     weighted score in the body. See MIN_AGENT_HITS / RELEVANCE_THRESHOLD.
 """
 
 from __future__ import annotations
@@ -25,17 +26,15 @@ ENGINEERING_TITLE = re.compile(
 
 EXCLUDED_TITLE = re.compile(
     r"\b(sales|account\s+(executive|manager)|recruit(er|ing)|talent|marketing|"
-    r"customer\s+success|support\s+engineer|partnerships?|business\s+development|"
+    r"customer\s+success|support\s+engineer|partners?|partnerships?|business\s+development|"
     r"product\s+designer|copywriter|legal|counsel|finance|accountant)\b",
     re.IGNORECASE,
 )
 
-CORE_TERMS = _terms(
+AGENT_TERMS = _terms(
     r"agents?",
     r"agentic",
     r"multi[-\s]?agents?",
-    r"llms?",
-    r"large\s+language\s+models?",
     r"langgraph",
     r"langchain",
     r"llama\s?index",
@@ -46,10 +45,27 @@ CORE_TERMS = _terms(
     r"function[-\s]calling",
     r"mcp",
     r"model\s+context\s+protocol",
+)
+
+LLM_TERMS = _terms(
+    r"llms?",
+    r"large\s+language\s+models?",
     r"vllm",
     r"llama\.cpp",
     r"ollama",
     r"llm\s+inference",
+)
+
+# Either list in the title qualifies an engineering role (title path).
+CORE_TERMS = AGENT_TERMS + LLM_TERMS
+
+# Domain-specific roles that only mention agents/LLMs as company boilerplate.
+# Applied to the body path only: a title with its own agent/LLM term still
+# qualifies (e.g. "Agent Security Engineer").
+DOMAIN_TITLE_DENY = re.compile(
+    r"\b(bioinformatics|biolog\w*|chemi\w*|drug|clinical|discovery|forecast\w*|data\s+scien\w*|"
+    r"security|fraud|actuar\w*|quant|hardware|mechanical|electrical|supply\s+chain|ads?|growth)\b",
+    re.IGNORECASE,
 )
 
 SUPPORT_TERMS = _terms(
@@ -75,11 +91,11 @@ SUPPORT_TERMS = _terms(
 
 AI_TITLE = re.compile(r"\b(ai|a\.i\.|ml|machine\s+learning|applied\s+ai)\b", re.IGNORECASE)
 
-# Calibrated so company boilerplate ("we build large language models") alone
-# does not qualify an unrelated role: it takes three distinct core terms, or two
-# core terms plus supporting context, or an AI-titled role with real signal.
-RELEVANCE_THRESHOLD = 6.0
-
+# STRICTNESS KNOB (body path). A generic-titled role needs at least
+# MIN_AGENT_HITS distinct agent-family terms in the body AND a weighted score of
+# at least RELEVANCE_THRESHOLD. Raise either to be stricter, lower to relax.
+MIN_AGENT_HITS = 2
+RELEVANCE_THRESHOLD = 8.0
 
 @dataclass(frozen=True, slots=True)
 class Relevance:
@@ -102,11 +118,18 @@ def assess_relevance(title: str, body: str) -> Relevance:
     if core_in_title:
         return Relevance(True, 10.0 + core_in_title, "core term in title")
 
-    score = 2.0 * _distinct_hits(CORE_TERMS, body) + 0.5 * _distinct_hits(SUPPORT_TERMS, body)
+    if DOMAIN_TITLE_DENY.search(title):
+        return Relevance(False, 0.0, "domain title")
+
+    agent_hits = _distinct_hits(AGENT_TERMS, body)
+    llm_hits = _distinct_hits(LLM_TERMS, body)
+    score = 3.0 * agent_hits + 1.0 * llm_hits + 0.5 * _distinct_hits(SUPPORT_TERMS, body)
     if AI_TITLE.search(title):
         score += 1.5
-    if score >= RELEVANCE_THRESHOLD:
+    if agent_hits >= MIN_AGENT_HITS and score >= RELEVANCE_THRESHOLD:
         return Relevance(True, score, "body signals")
+    if agent_hits < MIN_AGENT_HITS:
+        return Relevance(False, score, "insufficient agent evidence")
     return Relevance(False, score, "insufficient agent/LLM signal")
 
 
