@@ -73,6 +73,46 @@ export function formatDate(iso: string): string {
   return Number.isNaN(timestamp) ? "" : absoluteFormatter.format(timestamp);
 }
 
+export type LocationSummary = {
+  /** First listed location, or "" when the input has none. */
+  primary: string;
+  /** Number of further distinct locations. */
+  extra: number;
+  /** All distinct locations joined with " · ", for titles and tooltips. */
+  full: string;
+  /** "Primary" or "Primary +N more", ready for one-line display. */
+  display: string;
+};
+
+const LOCATION_SEPARATOR = /\s*[|;]\s*|\s+\/\s+/;
+
+/**
+ * Condenses a scraped multi-location string ("A | B; C / D") into a primary
+ * location plus a "+N more" count. Splits on `|`, `;` and a spaced slash
+ * (a bare "/" as in "US/Canada" is kept), trims, collapses whitespace and
+ * drops case-insensitive duplicates. Display-only: never write the result
+ * back to storage.
+ */
+export function formatLocationSummary(raw: string | null | undefined): LocationSummary {
+  const seen = new Set<string>();
+  const parts: string[] = [];
+  for (const piece of (raw ?? "").split(LOCATION_SEPARATOR)) {
+    const part = piece.replace(/\s+/g, " ").trim();
+    const key = part.toLowerCase();
+    if (!part || seen.has(key)) continue;
+    seen.add(key);
+    parts.push(part);
+  }
+  const primary = parts[0] ?? "";
+  const extra = Math.max(0, parts.length - 1);
+  return {
+    primary,
+    extra,
+    full: parts.join(" · "),
+    display: extra > 0 ? `${primary} +${extra} more` : primary,
+  };
+}
+
 /** Up to two initials for logo fallbacks: "Acme Agents" → "AA". */
 export function companyInitials(company: string): string {
   const letters = company

@@ -1,4 +1,4 @@
-import { formatSalaryRange } from "@/lib/format";
+import { formatLocationSummary, formatSalaryRange } from "@/lib/format";
 import { JOB_TYPE_LABELS, WORKPLACE_LABELS, type JobType, type WorkplaceType } from "@/lib/types";
 
 type JobMetaProps = {
@@ -11,16 +11,20 @@ type JobMetaProps = {
 };
 
 /**
- * "Remote (US) · Remote · Full-time · $180K – $240K". The workplace label is
- * dropped when the location string already says it (e.g. "Remote").
+ * "Remote (US) +2 more · Full-time · $180K – $240K". Multi-location strings are
+ * condensed to the first location plus a count (full list in the tooltip). The
+ * workplace label is dropped when the location already says it (e.g. "Remote").
  */
 export function JobMeta({ location, workplaceType, jobType, salaryMin, salaryMax, salaryCurrency }: JobMetaProps) {
   const workplace = WORKPLACE_LABELS[workplaceType];
   const salary = formatSalaryRange(salaryMin, salaryMax, salaryCurrency);
-  const locationMentionsWorkplace = location.toLowerCase().includes(workplace.toLowerCase());
+  const summary = formatLocationSummary(location);
+  const locationMentionsWorkplace = summary.full.toLowerCase().includes(workplace.toLowerCase());
 
-  const parts: Array<{ key: string; label: string; emphasis?: boolean }> = [
-    { key: "location", label: location },
+  const parts: Array<{ key: string; label: string; emphasis?: boolean; title?: string }> = [
+    ...(summary.display
+      ? [{ key: "location", label: summary.display, title: summary.extra > 0 ? summary.full : undefined }]
+      : []),
     ...(locationMentionsWorkplace ? [] : [{ key: "workplace", label: workplace }]),
     { key: "type", label: JOB_TYPE_LABELS[jobType] },
     ...(salary ? [{ key: "salary", label: salary, emphasis: true }] : []),
@@ -35,7 +39,12 @@ export function JobMeta({ location, workplaceType, jobType, salaryMin, salaryMax
               ·
             </span>
           )}
-          <span className={part.emphasis ? "font-medium text-zinc-800 dark:text-zinc-200" : undefined}>{part.label}</span>
+          <span
+            title={part.title}
+            className={part.emphasis ? "font-medium text-zinc-800 dark:text-zinc-200" : undefined}
+          >
+            {part.label}
+          </span>
         </li>
       ))}
     </ul>
