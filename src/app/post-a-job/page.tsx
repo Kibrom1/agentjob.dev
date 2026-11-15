@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { WaitlistForm } from "@/components/post-job/waitlist-form";
 import { PostJobForm } from "@/components/post-job/post-job-form";
 import { listCategories } from "@/lib/jobs";
 import { legalConfig, isPlaceholder } from "@/lib/legal";
@@ -103,15 +104,14 @@ function ComingSoon() {
         We&apos;re putting the finishing touches on employer posting and payments. In the meantime, every role on the
         board is collected from public company job boards, and the weekly digest keeps engineers up to date.
       </p>
-      {!isPlaceholder(email) && (
-        <p className="mt-6 text-zinc-600 dark:text-zinc-400">
-          Want to be first to post a role? Email{" "}
-          <a href={`mailto:${email}?subject=${encodeURIComponent("Early access: posting a job")}`} className="font-medium underline underline-offset-2">
-            {email}
-          </a>
-          .
-        </p>
-      )}
+      <p className="mt-6 text-zinc-600 dark:text-zinc-400">
+        Hiring engineers who build agents? Join the employer waitlist and we&apos;ll tell you the moment posting opens.
+      </p>
+      <WaitlistForm
+        mailtoHref={
+          isPlaceholder(email) ? null : `mailto:${email}?subject=${encodeURIComponent("Early access: posting a job")}`
+        }
+      />
       <p className="mt-8">
         <Link href="/" className="text-sm font-medium underline underline-offset-2">
           Back to all jobs
