@@ -537,7 +537,15 @@ export type Database = {
         Returns: boolean;
       };
       upsert_ingested_jobs: {
-        Args: { p_close_missing?: boolean; p_jobs: Json; p_source_name: string };
+        Args: {
+          p_allow_empty?: boolean;
+          p_close_missing?: boolean;
+          p_fetched_count?: number;
+          p_force_close?: boolean;
+          p_jobs: Json;
+          p_keep_ids?: string[];
+          p_source_name: string;
+        };
         Returns: Json;
       };
     };

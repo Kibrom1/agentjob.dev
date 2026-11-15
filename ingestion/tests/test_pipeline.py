@@ -14,16 +14,21 @@ from agentjobs_ingest.supabase import DatabaseError
 
 
 class FakeDatabase:
-    def __init__(self, fail=False, fail_log=False):
+    def __init__(self, fail=False, fail_log=False, outcome=None):
         self.calls = []
+        self.kwargs = []
+        self.outcome = outcome
         self.logged = []
         self.fail = fail
         self.fail_log = fail_log
 
-    def upsert(self, source_name, jobs, close_missing):
+    def upsert(self, source_name, jobs, close_missing, **kwargs):
         self.calls.append((source_name, jobs, close_missing))
+        self.kwargs.append(kwargs)
         if self.fail:
             raise DatabaseError("boom", 500)
+        if self.outcome is not None:
+            return self.outcome
         return {"inserted": len(jobs), "updated": 0, "skipped": 0, "failed": 0, "closed": 1, "errors": []}
 
     def log_run(self, report):
@@ -100,13 +105,80 @@ def test_fetch_failures_are_reported_without_db_calls(source, error, status):
     assert db.logged == [report]
 
 
-def test_no_relevant_jobs_skips_database(source):
+def posting(external_id="1", title="Senior Agent Engineer", description="<p>Build LLM agents with LangGraph, MCP and evals for enterprise customers.</p>"):
+    from agentjobs_ingest.models import RawPosting
+
+    return RawPosting(
+        external_id=external_id,
+        title=title,
+        location="Remote",
+        description_html=description,
+        apply_url=f"https://jobs.example/{external_id}",
+    )
+
+
+def test_empty_feed_does_not_close_anything(source):
+    # fetched == 0 is indistinguishable from an outage: no database call at all.
     db = FakeDatabase()
     with httpx.Client() as client:
         report = run_source(source, lambda c, b: FetchResult([], complete=True), client, db)
     assert report.status == "no_relevant_jobs"
     assert db.calls == []
     assert db.logged == [report]
+
+
+def test_feed_with_no_relevant_jobs_closes_the_source(source):
+    irrelevant = posting("9", title="Account Executive", description="<p>Sell software to enterprise customers.</p>")
+    db = FakeDatabase(outcome={"inserted": 0, "updated": 0, "skipped": 0, "failed": 0, "closed": 3, "close_skipped": 0, "errors": []})
+    with httpx.Client() as client:
+        report = run_source(source, lambda c, b: FetchResult([irrelevant], complete=True), client, db)
+    assert report.status == "no_relevant_jobs"
+    assert report.fetched == 1 and report.relevant == 0
+    assert db.calls == [("greenhouse:acme", [], True)]
+    assert db.kwargs == [{"allow_empty": True, "force_close": False, "keep_ids": [], "fetched_count": 1}]
+    assert report.database["closed"] == 3
+
+
+def test_incomplete_or_malformed_feed_never_closes_on_zero_relevant(source):
+    irrelevant = posting("9", title="Account Executive", description="<p>Sell software to enterprise customers.</p>")
+    for result in (FetchResult([irrelevant], complete=False), FetchResult([irrelevant], complete=True, malformed=1)):
+        db = FakeDatabase()
+        with httpx.Client() as client:
+            report = run_source(source, lambda c, b, r=result: r, client, db)
+        assert report.status == "no_relevant_jobs"
+        assert db.calls == []
+
+
+def test_mass_close_rail_is_reported_and_fails_the_run(source):
+    irrelevant = posting("9", title="Account Executive", description="<p>Sell software to enterprise customers.</p>")
+    db = FakeDatabase(outcome={"inserted": 0, "updated": 0, "skipped": 0, "failed": 0, "closed": 0, "close_skipped": 40, "errors": []})
+    with httpx.Client() as client:
+        report = run_source(source, lambda c, b: FetchResult([irrelevant], complete=True), client, db)
+    assert report.status == "close_skipped"
+    assert "--force-close" in (report.error or "")
+    assert exit_code([report, SourceReport(source_name="x:y")], strict=False) == 1
+    assert db.logged == [report]
+
+
+def test_force_close_is_passed_through(source):
+    irrelevant = posting("9", title="Account Executive", description="<p>Sell software to enterprise customers.</p>")
+    db = FakeDatabase()
+    with httpx.Client() as client:
+        run_source(source, lambda c, b: FetchResult([irrelevant], complete=True), client, db, force_close=True)
+        run([source], {"greenhouse": lambda c, b: FetchResult([posting()], complete=True)}, client, db, force_close=True)
+    assert db.kwargs[0]["force_close"] is True and db.kwargs[1]["force_close"] is True
+
+
+def test_normalizer_rejected_postings_are_kept_not_closed(source, caplog):
+    short = posting("2", description="<p>Build LLM agents with LangGraph and MCP.</p>")  # relevant but too short to normalise
+    good = posting("1")
+    db = FakeDatabase()
+    with httpx.Client() as client, caplog.at_level("WARNING"):
+        report = run_source(source, lambda c, b: FetchResult([good, short], complete=True), client, db)
+    assert report.rejected_by_normalizer == 1 and report.unknown_ids == ["2"]
+    assert db.calls[0][2] is True  # still closes genuinely-gone jobs
+    assert db.kwargs[0]["keep_ids"] == ["2"]
+    assert "rejected by the normalizer" in caplog.text
 
 
 def test_dry_run_and_database_failure(load_fixture, source):
@@ -155,6 +227,7 @@ def test_exit_codes():
     assert exit_code([report("ok"), report("not_found")], strict=True) == 1
     assert exit_code([report("ok"), report("fetch_failed")], strict=False) == 1
     assert exit_code([report("ok"), report("db_failed")], strict=False) == 1
+    assert exit_code([report("ok"), report("close_skipped")], strict=False) == 1
     assert exit_code([report("fetch_failed"), report("not_found")], strict=False) == 2
     assert exit_code([report("dry_run")], strict=False) == 0
     assert exit_code([], strict=False) == 2

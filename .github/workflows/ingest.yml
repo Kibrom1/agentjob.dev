@@ -15,6 +15,10 @@ on:
         description: "Limit to one source, e.g. ashby:langchain (optional)"
         type: string
         required: false
+      force_close:
+        description: "Bypass the mass-close cap (only after confirming a large drop is real)"
+        type: boolean
+        default: false
 
 concurrency:
   group: ingest
@@ -22,6 +26,8 @@ concurrency:
 
 permissions:
   contents: read
+  # Only for the failure-notification step (opens/updates one issue).
+  issues: write
 
 jobs:
   ingest:
@@ -44,8 +50,12 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DRY_RUN: ${{ inputs.dry_run }}
           SOURCE: ${{ inputs.source }}
+          FORCE_CLOSE: ${{ inputs.force_close }}
         run: |
-          args=(run --output "$RUNNER_TEMP/ingest-summary.json")
+          # --strict: a missing board (404) or any failed source fails the run, so
+          # a partially broken ATS fetch is a red run, not a quiet success.
+          args=(run --strict --output "$RUNNER_TEMP/ingest-summary.json")
+          if [[ "$FORCE_CLOSE" == "true" ]]; then args+=(--force-close); fi
           if [[ "$DRY_RUN" == "true" ]]; then args+=(--dry-run); fi
           if [[ -n "$SOURCE" ]]; then args+=(--source "$SOURCE"); fi
           python -m agentjobs_ingest "${args[@]}"
@@ -55,3 +65,22 @@ jobs:
           name: ingest-summary
           path: ${{ runner.temp }}/ingest-summary.json
           if-no-files-found: ignore
+      # Failure notification without any extra secret: the built-in GITHUB_TOKEN
+      # opens (or comments on) a single "ingest-failure" issue, which emails the
+      # repo watchers. GitHub also emails the workflow's owner on failed
+      # scheduled runs. See docs/runbooks/monitoring.md.
+      - name: Notify on failure
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        working-directory: .
+        run: |
+          gh label create ingest-failure --color B60205 --description "Scheduled ingestion failed" 2>/dev/null || true
+          existing=$(gh issue list --label ingest-failure --state open --json number --jq '.[0].number // empty')
+          body="Scheduled ingestion failed: $RUN_URL"
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "Ingestion run failed" --label ingest-failure --body "$body"
+          fi
