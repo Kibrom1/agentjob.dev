@@ -19,7 +19,7 @@ export function SubscribeCard({ source, idPrefix, anchorId = "subscribe" }: Subs
         Get AI agent jobs straight to your inbox
       </h2>
       <p className="mt-1 mb-4 text-sm text-zinc-600 dark:text-zinc-400">
-        One email a week with the newest roles. No spam, unsubscribe anytime.
+        One email a week with the newest roles. We&apos;ll ask you to confirm your address first. Unsubscribe anytime.
       </p>
       <SubscribeForm source={source} idPrefix={idPrefix} />
     </section>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { subscribeToDigest, type SubscribeState } from "@/app/actions";
+import { track } from "@/lib/analytics";
 
 type SubscribeFormProps = {
   source: "website" | "job-page";
@@ -16,11 +17,17 @@ export function SubscribeForm({ source, idPrefix }: SubscribeFormProps) {
   const emailId = `${idPrefix}-email`;
   const messageId = `${idPrefix}-message`;
 
+  const counted = state.status === "success" && state.countable;
+  useEffect(() => {
+    if (counted) track("digest_signup", { source });
+  }, [counted, source]);
+
   if (state.status === "success") {
     return (
-      <p role="status" className="rounded-lg bg-accent-50 px-3 py-2.5 text-sm text-accent-700 dark:bg-accent-950 dark:text-accent-400">
-        {state.message}
-      </p>
+      <div role="status" className="rounded-lg bg-accent-50 px-3 py-2.5 text-sm text-accent-700 dark:bg-accent-950 dark:text-accent-400">
+        <p className="font-semibold">Check your inbox</p>
+        <p className="mt-1">{state.message}</p>
+      </div>
     );
   }
 

@@ -4,13 +4,15 @@ import { clientAddress, rateLimitKey } from "@/lib/request-meta";
 import { getAdminDbClient } from "@/lib/supabase/admin";
 
 export type RateLimitPolicy = {
-  scope: "subscribe" | "post-job" | "unsubscribe" | "admin-auth" | "jobs-recent";
+  scope: "subscribe" | "post-job" | "unsubscribe" | "admin-auth" | "jobs-recent" | "digest-confirm" | "waitlist";
   limit: number;
   windowSeconds: number;
 };
 
 export const RATE_LIMITS = {
   subscribe: { scope: "subscribe", limit: 5, windowSeconds: 3600 },
+  digestConfirm: { scope: "digest-confirm", limit: 30, windowSeconds: 3600 },
+  waitlist: { scope: "waitlist", limit: 5, windowSeconds: 3600 },
   postJob: { scope: "post-job", limit: 10, windowSeconds: 3600 },
   unsubscribe: { scope: "unsubscribe", limit: 30, windowSeconds: 3600 },
   // Failed admin Basic-auth attempts only (see proxy.ts) — a single shared

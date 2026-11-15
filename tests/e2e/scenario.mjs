@@ -230,6 +230,16 @@ async function main() {
     await page.locator("#subscribe [role=status]").waitFor();
     subscriber = await one("select * from subscribers where email = 'reader@example.com'");
     assert.ok(subscriber);
+    assert.equal(subscriber.confirmed_at, null, "new subscribers start pending");
+    const confirmation = (await getJson(`${RESEND_STUB}/__test/emails`)).filter((e) => e.tags?.[0]?.value === "digest_confirmation");
+    assert.equal(confirmation.length, 1);
+    assert.deepEqual(confirmation[0].to, ["reader@example.com"]);
+    assert.ok(confirmation[0].html.includes(`/confirm/${subscriber.confirm_token}`));
+    await page.goto(`${APP}/confirm/${subscriber.confirm_token}`);
+    assert.equal((await one("select confirmed_at from subscribers where id = $1", [subscriber.id])).confirmed_at, null, "opening the link must not confirm");
+    await page.getByRole("button", { name: "Confirm subscription" }).click();
+    await page.getByRole("heading", { name: "You're subscribed" }).waitFor();
+    assert.ok((await one("select confirmed_at from subscribers where id = $1", [subscriber.id])).confirmed_at);
     await db.query("update subscribers set created_at = now() - interval '1 day' where id = $1", [subscriber.id]);
   });
 
@@ -260,7 +270,7 @@ async function main() {
   });
 
   await step("unsubscribe page requires confirmation and handles bad tokens", async () => {
-    await db.query("insert into subscribers (email) values ('second@example.com')");
+    await db.query("insert into subscribers (email, confirmed_at) values ('second@example.com', now())");
     const second = await one("select unsubscribe_token from subscribers where email = 'second@example.com'");
     await page.goto(`${APP}/unsubscribe/${second.unsubscribe_token}`);
     assert.equal((await one("select unsubscribed_at from subscribers where email = 'second@example.com'")).unsubscribed_at, null);

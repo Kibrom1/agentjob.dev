@@ -1,6 +1,7 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ApplyLink } from "@/components/apply-link";
 import { CompanyLogo } from "@/components/company-logo";
 import { JsonLd } from "@/components/json-ld";
 import { Markdown } from "@/components/markdown";
@@ -129,17 +130,17 @@ export default async function JobPage({ params }: JobPageProps) {
     { label: "Open until", value: formatDate(job.expires_at) },
   ];
 
-  const applyButton = (className: string) =>
+  const applyButton = (className: string, placement: "top" | "bottom" | "sidebar" | "mobile-bar") =>
     applyHref ? (
-      <a
+      <ApplyLink
         href={applyHref}
-        target="_blank"
-        rel="noopener noreferrer"
+        slug={job.slug}
+        placement={placement}
         className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent-700 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-800 ${className}`}
       >
         Apply for this role
         <span aria-hidden="true">↗</span>
-      </a>
+      </ApplyLink>
     ) : (
       <p className={`text-sm text-zinc-500 ${className}`}>Applications for this role are handled directly by {job.company}.</p>
     );
@@ -221,7 +222,7 @@ export default async function JobPage({ params }: JobPageProps) {
                 </span>
               )}
               <TagList tags={job.tags} hrefForTag={hrefForTag} className="mt-4" />
-              {applyButton("mt-6 w-full sm:w-auto lg:hidden")}
+              {applyButton("mt-6 w-full sm:w-auto lg:hidden", "top")}
             </div>
           </header>
 
@@ -229,7 +230,7 @@ export default async function JobPage({ params }: JobPageProps) {
             <Markdown>{job.description}</Markdown>
           </div>
 
-          <div className="border-t border-zinc-200 pt-8 dark:border-zinc-800">{applyButton("w-full sm:w-auto")}</div>
+          <div className="border-t border-zinc-200 pt-8 dark:border-zinc-800">{applyButton("w-full sm:w-auto", "bottom")}</div>
         </div>
 
         <aside className="space-y-6 lg:sticky lg:top-20 lg:self-start">
@@ -248,7 +249,7 @@ export default async function JobPage({ params }: JobPageProps) {
                 </div>
               ))}
             </dl>
-            {applyButton("mt-4 hidden w-full lg:flex")}
+            {applyButton("mt-4 hidden w-full lg:flex", "sidebar")}
           </section>
 
           <SourceAttribution applyUrl={job.apply_url} company={job.company} slug={job.slug} />
@@ -265,7 +266,7 @@ export default async function JobPage({ params }: JobPageProps) {
             data-testid="mobile-apply-bar"
             className="sticky bottom-0 z-30 border-t border-zinc-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden dark:border-zinc-800 dark:bg-zinc-950/95"
           >
-            <div className="mx-auto max-w-6xl sm:px-2">{applyButton("w-full")}</div>
+            <div className="mx-auto max-w-6xl sm:px-2">{applyButton("w-full", "mobile-bar")}</div>
           </div>
         </>
       )}
