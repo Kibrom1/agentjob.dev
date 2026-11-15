@@ -142,21 +142,21 @@ begin
   call test_helpers.expect_error(
     $f$insert into public.jobs (
       status, source, title, company, location, workplace_type, category_slug,
-      description, apply_url, is_featured, expires_at, featured_until
+      description, apply_url, is_featured, published_at, expires_at, featured_until
     ) values (
       'active', 'admin', 'Featured Past Expiry Role', 'Co', 'Remote', 'remote', 'agent-platform',
       $desc$A sufficiently long job description for testing. A sufficiently long job description for testing. $desc$,
-      'https://x.test', true, now() + interval '1 day', now() + interval '2 days'
+      'https://x.test', true, now(), now() + interval '1 day', now() + interval '2 days'
     )$f$,
     '23514');
 
   -- happy path for contrast: featured_until at or before expires_at is fine.
   insert into public.jobs (
     status, source, title, company, location, workplace_type, category_slug,
-    description, apply_url, is_featured, expires_at, featured_until
+    description, apply_url, is_featured, published_at, expires_at, featured_until
   ) values (
     'active', 'admin', 'Featured Within Window Role', 'Co', 'Remote', 'remote', 'agent-platform',
-    v_desc, 'https://x.test', true, now() + interval '2 days', now() + interval '2 days'
+    v_desc, 'https://x.test', true, now(), now() + interval '2 days', now() + interval '2 days'
   );
   perform test_helpers.assert(
     (select is_featured from public.jobs where title = 'Featured Within Window Role'),
@@ -189,23 +189,23 @@ begin
 
   -- Defaults (no p_published_after) is unchanged: both rows visible.
   perform test_helpers.assert(
-    (select count(*) from public.search_jobs(p_category => 'agent-platform')) = 2,
+    (select count(*) from public.search_jobs(p_category => 'agent-platform') where title in ('Old Published Job', 'Recently Published Job')) = 2,
     'both jobs visible with no published_after cutoff'
   );
 
   -- With a cutoff, only the job published after it is returned.
   perform test_helpers.assert(
-    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day')) = 1,
+    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day') where title in ('Old Published Job', 'Recently Published Job')) = 1,
     'only the recently published job passes the cutoff'
   );
   perform test_helpers.assert(
-    (select title from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day')) = 'Recently Published Job',
+    (select title from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day') where title in ('Old Published Job', 'Recently Published Job')) = 'Recently Published Job',
     'the surviving row is the recent one, not the old one'
   );
 
   -- A cutoff before both jobs' published_at still returns both.
   perform test_helpers.assert(
-    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '30 days')) = 2,
+    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '30 days') where title in ('Old Published Job', 'Recently Published Job')) = 2,
     'a cutoff before both jobs still returns both'
   );
 end;
