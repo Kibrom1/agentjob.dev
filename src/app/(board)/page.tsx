@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { FilterChips, type FilterChip } from "@/components/filter-chips";
 import { JobCard } from "@/components/job-card";
+import { JsonLd } from "@/components/json-ld";
+import { buildWebSiteJsonLd } from "@/lib/job-schema";
 import { JobSearchBox } from "@/components/job-search-box";
 import { Pagination } from "@/components/pagination";
 import { SubscribeCard } from "@/components/subscribe-card";
@@ -65,6 +67,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
   return (
     <>
+      {!filtered && filters.page === 1 && <JsonLd data={buildWebSiteJsonLd()} />}
       <section className="border-b border-zinc-200 bg-gradient-to-b from-zinc-50 to-white dark:border-zinc-800 dark:from-zinc-900/60 dark:to-zinc-950">
         <div className="mx-auto max-w-6xl px-4 pt-12 pb-8 sm:px-6 sm:pt-16">
           <p className="font-mono text-xs tracking-wider text-accent-700 uppercase dark:text-accent-400">
@@ -78,7 +81,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             agent engineering roles.
           </p>
           <div className="mt-8 max-w-2xl">
-            <Suspense fallback={<div className="h-12 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900" />}>
+            <Suspense fallback={<div className="h-12 rounded-xl border border-zinc-500 bg-white dark:border-zinc-500 dark:bg-zinc-900" />}>
               <JobSearchBox
                 preserved={{ category: filters.category, workplace: filters.workplace, tag: filters.tag }}
               />
@@ -120,7 +123,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 if (index === INLINE_DIGEST_AFTER - 1 && result.jobs.length > INLINE_DIGEST_AFTER) {
                   return [
                     item,
-                    <li key="inline-digest">
+                    <li key="inline-digest" className="lg:hidden">
                       <SubscribeCard source="website" idPrefix="feed-digest" anchorId="feed-digest" />
                     </li>,
                   ];
