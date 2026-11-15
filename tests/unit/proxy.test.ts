@@ -41,6 +41,19 @@ describe("admin proxy", () => {
     expect(rpc.mock.calls[0]?.[1].p_key).toMatch(/^admin-auth:/);
   });
 
+  it("401s a request with no Authorization header without consuming the failed-attempt bucket", async () => {
+    vi.stubEnv("ADMIN_PASSWORD", "correct horse battery staple");
+    vi.stubEnv("ADMIN_USERNAME", "root");
+    rpc.mockClear();
+
+    for (let i = 0; i < 25; i++) {
+      const response = await proxy(req());
+      expect(response.status).toBe(401);
+      expect(response.headers.get("WWW-Authenticate")).toMatch(/^Basic /);
+    }
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("429s before revealing anything further once the failed-attempt bucket is exceeded", async () => {
     vi.stubEnv("ADMIN_PASSWORD", "correct horse battery staple");
     vi.stubEnv("ADMIN_USERNAME", "root");
