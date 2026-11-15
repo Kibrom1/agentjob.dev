@@ -34,7 +34,7 @@ export default function AboutPage() {
       <h2>Contact and removal requests</h2>
       <p>
         Questions, corrections, or want a listing removed? Email <ContactLink email={legalConfig.contactEmail} /> and
-        include the listing URL.
+        include the listing URL. We act on removal requests within {legalConfig.takedownResponse}.
       </p>
       <p>
         Employers can <a href="/post-a-job">post a job</a>. See also our <a href="/terms">terms</a>,{" "}

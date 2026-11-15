@@ -52,7 +52,8 @@ export default function TermsPage() {
       <h2>Removal requests</h2>
       <p>
         If you are an employer and want an aggregated listing corrected or removed, contact us using the details on the{" "}
-        <a href="/about">about page</a> and we will review the request.
+        <a href="/about">about page</a>. We act on removal requests within {legalConfig.takedownResponse}, and a
+        company that asks to be removed is not collected again.
       </p>
 
       <h2>Disclaimers and liability</h2>
