@@ -10,8 +10,11 @@ export const legalConfig = {
   companyName: "Bright Steps Digital",
   contactEmail: "brightstepsdigitalllc@gmail.com",
   privacyEmail: "brightstepsdigitalllc@gmail.com",
-  // Same value as the POSTAL_ADDRESS env var the digest requires (src/lib/env.ts).
-  postalAddress: process.env.POSTAL_ADDRESS?.trim() || "[[PLACEHOLDER: postal address (also POSTAL_ADDRESS env var)]]",
+  // Online-only business: the website does not need a street address. This is
+  // shown (footer, privacy policy) only when POSTAL_ADDRESS is set; an empty
+  // string hides it. The digest emails still require POSTAL_ADDRESS (CAN-SPAM),
+  // enforced in src/lib/env.ts.
+  postalAddress: process.env.POSTAL_ADDRESS?.trim() ?? "",
   jurisdiction: "[[PLACEHOLDER: governing law and jurisdiction]]",
   lastUpdated: "[[PLACEHOLDER: date these terms were last reviewed]]",
 } as const;

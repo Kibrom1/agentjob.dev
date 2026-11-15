@@ -21,6 +21,8 @@ describe("legalConfig", () => {
       expect(legalConfig).toHaveProperty(key);
     }
     expect(hasPlaceholders()).toBe(true);
+    // Online-only: no postal address on the site unless POSTAL_ADDRESS is set.
+    expect(legalConfig.postalAddress === "" || !legalConfig.postalAddress.includes("PLACEHOLDER")).toBe(true);
     expect(hasPlaceholders({ a: "real value" })).toBe(false);
   });
 });
@@ -48,5 +50,12 @@ describe("footer and sitemap", () => {
   it("lists the legal pages in the sitemap", async () => {
     const urls = (await sitemap()).map((entry) => entry.url);
     for (const link of LEGAL_LINKS) expect(urls.some((u) => u.endsWith(link.href))).toBe(true);
+  });
+});
+
+describe("online-only business (no postal address on the site)", () => {
+  it("footer does not show a postal-address placeholder when POSTAL_ADDRESS is unset", () => {
+    const html = renderToStaticMarkup(createElement(SiteFooter));
+    expect(html).not.toContain("postal address");
   });
 });
