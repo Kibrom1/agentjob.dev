@@ -19,7 +19,6 @@
 --     is_featured or extend expires_at, never raise featured_until above it.
 -- No currently-applied migration or seed data sets featured_until without
 -- going through one of the above, so no backfill is required.
-\set ON_ERROR_STOP on
 
 alter table public.jobs
   add constraint jobs_featured_within_window_chk
