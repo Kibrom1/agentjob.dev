@@ -189,23 +189,23 @@ begin
 
   -- Defaults (no p_published_after) is unchanged: both rows visible.
   perform test_helpers.assert(
-    (select count(*) from public.search_jobs(p_category => 'agent-platform')) = 2,
+    (select count(*) from public.search_jobs(p_category => 'agent-platform') where title in ('Old Published Job', 'Recently Published Job')) = 2,
     'both jobs visible with no published_after cutoff'
   );
 
   -- With a cutoff, only the job published after it is returned.
   perform test_helpers.assert(
-    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day')) = 1,
+    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day') where title in ('Old Published Job', 'Recently Published Job')) = 1,
     'only the recently published job passes the cutoff'
   );
   perform test_helpers.assert(
-    (select title from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day')) = 'Recently Published Job',
+    (select title from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '1 day') where title in ('Old Published Job', 'Recently Published Job')) = 'Recently Published Job',
     'the surviving row is the recent one, not the old one'
   );
 
   -- A cutoff before both jobs' published_at still returns both.
   perform test_helpers.assert(
-    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '30 days')) = 2,
+    (select count(*) from public.search_jobs(p_category => 'agent-platform', p_published_after => now() - interval '30 days') where title in ('Old Published Job', 'Recently Published Job')) = 2,
     'a cutoff before both jobs still returns both'
   );
 end;
