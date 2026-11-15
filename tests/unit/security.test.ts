@@ -109,3 +109,60 @@ describe("admin search pattern", () => {
     expect(toIlikePattern("x".repeat(300))).toHaveLength(104);
   });
 });
+
+describe("content security policy (report-only)", () => {
+  it("ships report-only with the expected directives and no enforcing header", async () => {
+    const { buildContentSecurityPolicy } = await import("@/lib/csp");
+    const src = (await import("node:fs")).readFileSync("next.config.ts", "utf8");
+    expect(src).toContain('key: "Content-Security-Policy-Report-Only"');
+    expect(src).not.toMatch(/key: "Content-Security-Policy"/);
+    const directives = buildContentSecurityPolicy(false).split("; ");
+    expect(directives.join(";")).not.toContain("unsafe-eval");
+    expect(buildContentSecurityPolicy(true)).toContain("'unsafe-eval'");
+    for (const d of [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      "object-src 'none'",
+      "frame-ancestors 'none'",
+      "form-action 'self' https://checkout.stripe.com",
+      "base-uri 'self'",
+      "report-uri /api/csp-report",
+    ]) {
+      expect(directives.some((x) => x.startsWith(d))).toBe(true);
+    }
+  });
+});
+
+describe("csp-report route", () => {
+  const post = async (body: BodyInit | null, headers: HeadersInit = {}) => {
+    const { POST } = await import("@/app/api/csp-report/route");
+    return POST(new Request("https://x.dev/api/csp-report", { method: "POST", body, headers }));
+  };
+
+  it("204s on a legacy report and logs scrubbed fields only", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const res = await post(
+      JSON.stringify({
+        "csp-report": {
+          "document-uri": "https://x.dev/jobs/a?token=secret",
+          "violated-directive": "img-src",
+          "blocked-uri": "https://evil.test/p.png?u=me",
+        },
+      }),
+    );
+    expect(res.status).toBe(204);
+    const logged = String(warn.mock.calls[0]?.[1]);
+    expect(logged).not.toContain("secret");
+    expect(logged).not.toContain("u=me");
+    warn.mockRestore();
+  });
+
+  it("never throws on garbage and rejects oversized bodies", async () => {
+    expect((await post("not json")).status).toBe(204);
+    expect((await post(null)).status).toBe(204);
+    expect((await post("x".repeat(9 * 1024))).status).toBe(413);
+    expect((await post("{}", { "content-length": "999999" })).status).toBe(413);
+  });
+});

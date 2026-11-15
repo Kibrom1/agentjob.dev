@@ -12,12 +12,13 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  if (!(await isAuthorizedAdmin(request.headers.get("authorization"), config))) {
-    // Only failed attempts consume the bucket, so a browser that has already
-    // cached valid credentials (sent on every subsequent request) is never
-    // throttled by its own normal use of the admin console — only a string of
-    // wrong-credential requests (brute force / credential stuffing) is.
-    const allowed = await consumeRateLimit(RATE_LIMITS.adminAuth, request.headers);
+  const authorization = request.headers.get("authorization");
+  if (!(await isAuthorizedAdmin(authorization, config))) {
+    // Only requests that PRESENT wrong credentials consume the bucket. A request
+    // with no Authorization header at all is just the browser's first visit
+    // (before its credential prompt), not a guess, so it gets the 401 challenge
+    // for free. Cached valid credentials are never throttled either.
+    const allowed = authorization === null ? true : await consumeRateLimit(RATE_LIMITS.adminAuth, request.headers);
     if (!allowed) {
       return new NextResponse("Too many failed attempts. Try again later.", {
         status: 429,
