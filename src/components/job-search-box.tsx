@@ -2,10 +2,17 @@
 
 import type { Route } from "next";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useSyncExternalStore, useTransition, type FormEvent } from "react";
 import { SEARCH_QUERY_MAX_LENGTH } from "@/lib/validation";
 
 const DEBOUNCE_MS = 300;
+const NARROW_QUERY = "(max-width: 639px)"; // below Tailwind's sm breakpoint
+
+function subscribeNarrow(onChange: () => void) {
+  const mql = window.matchMedia(NARROW_QUERY);
+  mql.addEventListener("change", onChange);
+  return () => mql.removeEventListener("change", onChange);
+}
 
 /** Params the search box carries along when it submits (without JS). */
 type PreservedFilters = {
@@ -34,6 +41,8 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
+  // Long placeholder is truncated on phones; the server snapshot is the desktop text.
+  const isNarrow = useSyncExternalStore(subscribeNarrow, () => window.matchMedia(NARROW_QUERY).matches, () => false);
 
   useEffect(() => {
     const input = inputRef.current;
@@ -101,7 +110,7 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
         type="search"
         defaultValue={urlQuery}
         maxLength={SEARCH_QUERY_MAX_LENGTH}
-        placeholder="Search roles, companies or stacks — e.g. LangGraph, vLLM, MCP"
+        placeholder={isNarrow ? "Search roles" : "Search roles, companies or stacks — e.g. LangGraph, vLLM, MCP"}
         autoComplete="off"
         spellCheck={false}
         enterKeyHint="search"

@@ -12,7 +12,7 @@ export function Logo() {
   return (
     <Link
       href="/"
-      className="group inline-flex items-center gap-2 font-mono text-sm font-semibold tracking-tight"
+      className="group inline-flex min-h-11 items-center gap-2 font-mono text-sm font-semibold tracking-tight"
       aria-label={`${siteConfig.name} home`}
     >
       <span

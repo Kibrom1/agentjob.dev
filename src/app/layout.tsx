@@ -32,6 +32,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
+  // Lets env(safe-area-inset-*) work so the mobile apply bar clears the home indicator.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#ffffff" },
     { media: "(prefers-color-scheme: dark)", color: "#09090b" },

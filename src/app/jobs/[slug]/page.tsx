@@ -7,7 +7,7 @@ import { Markdown } from "@/components/markdown";
 import { SourceAttribution } from "@/components/source-attribution";
 import { SubscribeCard } from "@/components/subscribe-card";
 import { TagList } from "@/components/tag-list";
-import { buildApplyHref, formatDate, formatSalaryRange } from "@/lib/format";
+import { buildApplyHref, formatDate, formatSalaryRange, splitLocations } from "@/lib/format";
 import { getJobBySlug } from "@/lib/jobs";
 import { buildJobSearchHref } from "@/lib/search-params";
 import { absoluteUrl, siteConfig } from "@/lib/site";
@@ -116,13 +116,14 @@ export default async function JobPage({ params }: JobPageProps) {
 
   const applyHref = buildApplyHref(job.apply_url, job.title, siteConfig.domain);
   const salary = formatSalaryRange(job.salary_min, job.salary_max, job.salary_currency);
+  const locations = splitLocations(job.location);
   const hrefForTag = (tag: string): Route => buildJobSearchHref({ page: 1 }, { tag });
 
   const details: Array<{ label: string; value: string }> = [
-    { label: "Location", value: job.location },
+    { label: "Location", value: locations.join(" · ") || job.location },
     { label: "Workplace", value: WORKPLACE_LABELS[job.workplace_type] },
     { label: "Employment", value: JOB_TYPE_LABELS[job.job_type] },
-    ...(salary ? [{ label: "Salary", value: salary }] : []),
+    { label: "Salary", value: salary ?? "Not listed" },
     ...(job.category ? [{ label: "Category", value: job.category.name }] : []),
     { label: "Posted", value: formatDate(job.published_at) },
     { label: "Open until", value: formatDate(job.expires_at) },
@@ -192,15 +193,28 @@ export default async function JobPage({ params }: JobPageProps) {
                 )}
               </p>
               <h1 className="mt-1 text-2xl font-semibold tracking-tight text-balance sm:text-3xl">{job.title}</h1>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {job.location} · {WORKPLACE_LABELS[job.workplace_type]} · {JOB_TYPE_LABELS[job.job_type]}
-                {salary && (
-                  <>
-                    {" · "}
-                    <span className="font-medium text-zinc-800 dark:text-zinc-200">{salary}</span>
-                  </>
-                )}
-              </p>
+              <ul
+                aria-label="Role summary"
+                className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-zinc-500 dark:text-zinc-400"
+              >
+                {[
+                  ...(locations.length > 0 ? locations : [job.location]),
+                  WORKPLACE_LABELS[job.workplace_type],
+                  JOB_TYPE_LABELS[job.job_type],
+                  ...(salary ? [salary] : []),
+                ].map((item, index) => (
+                  <li key={`${index}-${item}`} className="flex items-center gap-2">
+                    {index > 0 && (
+                      <span aria-hidden="true" className="text-zinc-300 dark:text-zinc-700">
+                        ·
+                      </span>
+                    )}
+                    <span className={salary && item === salary ? "font-medium text-zinc-800 dark:text-zinc-200" : undefined}>
+                      {item}
+                    </span>
+                  </li>
+                ))}
+              </ul>
               {job.is_featured && (
                 <span className="mt-3 inline-flex rounded-full bg-accent-700 px-2 py-0.5 text-xs font-medium text-white">
                   Featured
@@ -242,6 +256,19 @@ export default async function JobPage({ params }: JobPageProps) {
           <SubscribeCard source="job-page" idPrefix="job-digest" />
         </aside>
       </article>
+
+      {applyHref && (
+        <>
+          {/* Sticky (not fixed): pins to the viewport bottom while reading, then rests in
+              normal flow above the footer, so it never covers content or the footer. */}
+          <div
+            data-testid="mobile-apply-bar"
+            className="sticky bottom-0 z-30 border-t border-zinc-200 bg-white/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur lg:hidden dark:border-zinc-800 dark:bg-zinc-950/95"
+          >
+            <div className="mx-auto max-w-6xl sm:px-2">{applyButton("w-full")}</div>
+          </div>
+        </>
+      )}
     </>
   );
 }
