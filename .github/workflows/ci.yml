@@ -66,6 +66,7 @@ jobs:
           python-version: "3.12"
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends postgresql-client
       - run: pip install -e "ingestion[test]"
+      - run: ./scripts/check-migrations.sh
       - run: ./scripts/test-db.sh
         env:
           DATABASE_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
