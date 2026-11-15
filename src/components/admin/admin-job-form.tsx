@@ -146,7 +146,7 @@ export function AdminJobForm({ categories }: { categories: Category[] }) {
         <button
           type="submit"
           disabled={pending}
-          className="ml-auto h-10 rounded-lg bg-accent-600 px-5 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-70"
+          className="ml-auto h-10 rounded-lg bg-accent-700 px-5 text-sm font-semibold text-white hover:bg-accent-800 disabled:opacity-70"
         >
           {pending ? "Publishing…" : "Publish listing"}
         </button>

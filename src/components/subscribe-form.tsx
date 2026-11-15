@@ -60,7 +60,7 @@ export function SubscribeForm({ source, idPrefix }: SubscribeFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="h-10 shrink-0 rounded-lg bg-accent-600 px-4 text-sm font-medium text-white transition-colors hover:bg-accent-700 disabled:cursor-wait disabled:opacity-70"
+          className="h-10 shrink-0 rounded-lg bg-accent-700 px-4 text-sm font-medium text-white transition-colors hover:bg-accent-800 disabled:cursor-wait disabled:opacity-70"
         >
           {isPending ? "Subscribing…" : "Subscribe"}
         </button>

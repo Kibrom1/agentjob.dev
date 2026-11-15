@@ -70,7 +70,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
               href={`/jobs/${job.slug}`}
-              className="inline-flex h-10 items-center rounded-lg bg-accent-600 px-4 text-sm font-semibold text-white hover:bg-accent-700"
+              className="inline-flex h-10 items-center rounded-lg bg-accent-700 px-4 text-sm font-semibold text-white hover:bg-accent-800"
             >
               View your listing
             </Link>
@@ -94,7 +94,7 @@ export default async function CheckoutSuccessPage({ searchParams }: Props) {
           <span
             role="status"
             aria-label="Waiting for payment confirmation"
-            className="mx-auto mt-8 block size-6 animate-spin rounded-full border-2 border-zinc-300 border-t-accent-600"
+            className="mx-auto mt-8 block size-6 animate-spin motion-reduce:animate-none rounded-full border-2 border-zinc-300 border-t-accent-600"
           />
         </>
       ) : (

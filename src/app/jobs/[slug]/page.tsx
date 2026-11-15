@@ -134,7 +134,7 @@ export default async function JobPage({ params }: JobPageProps) {
         href={applyHref}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-700 ${className}`}
+        className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-accent-700 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-800 ${className}`}
       >
         Apply for this role
         <span aria-hidden="true">↗</span>
@@ -202,7 +202,7 @@ export default async function JobPage({ params }: JobPageProps) {
                 )}
               </p>
               {job.is_featured && (
-                <span className="mt-3 inline-flex rounded-full bg-accent-600 px-2 py-0.5 text-xs font-medium text-white">
+                <span className="mt-3 inline-flex rounded-full bg-accent-700 px-2 py-0.5 text-xs font-medium text-white">
                   Featured
                 </span>
               )}

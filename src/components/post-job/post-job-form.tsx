@@ -472,7 +472,7 @@ export function PostJobForm({ categories, restoreDraft }: PostJobFormProps) {
             key="submit"
             type="submit"
             disabled={pending}
-            className="h-11 rounded-lg bg-accent-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-700 disabled:cursor-wait disabled:opacity-70"
+            className="h-11 rounded-lg bg-accent-700 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-800 disabled:cursor-wait disabled:opacity-70"
           >
             {pending ? "Opening checkout…" : `Continue to payment · ${formatUsd(total)}`}
           </button>

@@ -40,7 +40,7 @@ export function JobCard({ job, categoryName, activeTag, hrefForTag, now }: JobCa
           </div>
           <div className="flex shrink-0 items-center gap-2 text-xs">
             {job.is_featured && (
-              <span className="rounded-full bg-accent-600 px-2 py-0.5 font-medium text-white">Featured</span>
+              <span className="rounded-full bg-accent-700 px-2 py-0.5 font-medium text-white">Featured</span>
             )}
             <time dateTime={job.published_at} className="font-mono text-zinc-500 dark:text-zinc-400">
               {formatRelativeTime(job.published_at, now)}
@@ -65,7 +65,7 @@ export function JobCard({ job, categoryName, activeTag, hrefForTag, now }: JobCa
               {categoryName}
             </span>
           )}
-          <TagList tags={job.tags} activeTag={activeTag} hrefForTag={hrefForTag} />
+          <TagList tags={job.tags} max={5} activeTag={activeTag} hrefForTag={hrefForTag} />
         </div>
       </div>
 

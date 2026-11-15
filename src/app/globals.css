@@ -11,6 +11,7 @@
   --color-accent-500: oklch(0.7 0.15 165);
   --color-accent-600: oklch(0.6 0.13 165);
   --color-accent-700: oklch(0.5 0.11 165);
+  --color-accent-800: oklch(0.42 0.1 165);
   --color-accent-950: oklch(0.26 0.05 165);
 }
 
