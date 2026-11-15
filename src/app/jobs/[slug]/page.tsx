@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: JobPageProps): Promise<Metada
     description,
     alternates: { canonical: path },
     openGraph: { type: "article", title, description, url: path, publishedTime: job.published_at },
-    twitter: { card: "summary", title, description },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
