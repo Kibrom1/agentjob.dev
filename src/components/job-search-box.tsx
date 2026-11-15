@@ -134,7 +134,7 @@ export function JobSearchBox({ preserved }: JobSearchBoxProps) {
         <span
           role="status"
           aria-label="Updating results"
-          className="absolute top-1/2 right-16 size-4 -translate-y-1/2 animate-spin rounded-full border-2 border-zinc-300 border-t-accent-600"
+          className="absolute top-1/2 right-16 size-4 -translate-y-1/2 animate-spin motion-reduce:animate-none rounded-full border-2 border-zinc-300 border-t-accent-600"
         />
       )}
       <button type="submit" className="sr-only">
