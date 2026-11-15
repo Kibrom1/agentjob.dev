@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { listLiveJobSlugs } from "@/lib/jobs";
+import { LEGAL_PATHS } from "@/lib/legal";
 import { absoluteUrl } from "@/lib/site";
 
 // Generated on request rather than at build time, so `next build` never needs
@@ -22,6 +23,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.6,
     },
+    ...LEGAL_PATHS.map((path) => ({
+      url: absoluteUrl(path),
+      changeFrequency: "monthly" as const,
+      priority: 0.3,
+    })),
     ...jobs.map((job) => ({
       url: absoluteUrl(`/jobs/${job.slug}`),
       lastModified: new Date(job.published_at),
