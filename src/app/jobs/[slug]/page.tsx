@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CompanyLogo } from "@/components/company-logo";
 import { JsonLd } from "@/components/json-ld";
 import { Markdown } from "@/components/markdown";
+import { SourceAttribution } from "@/components/source-attribution";
 import { SubscribeCard } from "@/components/subscribe-card";
 import { TagList } from "@/components/tag-list";
 import { buildApplyHref, formatDate, formatSalaryRange } from "@/lib/format";
@@ -235,6 +236,8 @@ export default async function JobPage({ params }: JobPageProps) {
             </dl>
             {applyButton("mt-4 hidden w-full lg:flex")}
           </section>
+
+          <SourceAttribution applyUrl={job.apply_url} company={job.company} slug={job.slug} />
 
           <SubscribeCard source="job-page" idPrefix="job-digest" />
         </aside>

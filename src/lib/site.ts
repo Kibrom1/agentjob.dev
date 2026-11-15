@@ -30,7 +30,7 @@ export const siteConfig = {
   domain: "agentjob.dev",
   tagline: "Jobs for engineers who build AI agents",
   description:
-    "Hand-picked roles for AI agent and multi-agent systems engineers: orchestration, tool-use backends, local LLM infrastructure, evals and more.",
+    "Roles for AI agent and multi-agent systems engineers, collected from company job boards and employer postings: orchestration, tool-use backends, local LLM infrastructure, evals and more.",
   url: resolveSiteUrl(),
   pageSize: 30,
   maxPage: 200,

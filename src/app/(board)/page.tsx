@@ -71,8 +71,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             Jobs for engineers who build <span className="text-accent-600 dark:text-accent-400">AI agents</span>
           </h1>
           <p className="mt-4 max-w-2xl text-base text-pretty text-zinc-600 sm:text-lg dark:text-zinc-400">
-            Orchestration, multi-agent systems, tool-use backends and local LLM infrastructure — one focused board, no
-            generic “AI” noise.
+            Orchestration, multi-agent systems, tool-use backends and local LLM infrastructure — one focused board for
+            agent engineering roles.
           </p>
           <div className="mt-8 max-w-2xl">
             <Suspense fallback={<div className="h-12 rounded-xl border border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900" />}>
