@@ -98,6 +98,15 @@ else
   record FAIL "home + canonical" "GET / -> 200 but canonical not under $EXPECT_ORIGIN (${found:-no canonical link})"
 fi
 
+# 2b. Share card metadata (only meaningful when the home page loaded)
+if [ "$STATUS" = "200" ]; then
+  if grep -Eiq 'property="og:image"' "$BODY" && grep -Eiq 'name="twitter:card"[^>]*content="summary_large_image"' "$BODY"; then
+    record PASS "share card meta" "home has og:image and twitter:card=summary_large_image"
+  else
+    record FAIL "share card meta" "home is missing og:image or twitter:card=summary_large_image"
+  fi
+fi
+
 # 3. Legal pages
 for p in /terms /privacy /refund /about; do
   expect_status "page $p" "$p" 200
