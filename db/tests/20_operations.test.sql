@@ -144,6 +144,7 @@ declare
   v_job2_id uuid;
   v_job     public.jobs;
   v_active  public.jobs;
+  v_published timestamptz;
 begin
   v_job_id := public.create_job_posting(
     jsonb_build_object('company_name', 'Orbit Labs', 'email', '  Founder@Orbit.TEST ', 'website_url', 'https://orbit.test'),
@@ -217,9 +218,23 @@ begin
   );
   perform test_helpers.assert(public.mark_checkout_expired('cs_test_orbit_2') = 0, 'expiry idempotent');
 
-  -- An expired session can no longer be activated into a live job
+  -- WP-10: a late payment for an expired session revives the job (the caller
+  -- has verified with Stripe that the session is paid) and stays idempotent.
   v_active := public.activate_paid_job('cs_test_orbit_2', true);
-  perform test_helpers.assert(v_active.status = 'payment_expired', 'activation does not resurrect expired checkout');
+  perform test_helpers.assert(v_active.status = 'active' and v_active.is_featured, 'paid-after-expired checkout activates job');
+  v_published := v_active.published_at;
+  v_active := public.activate_paid_job('cs_test_orbit_2', true);
+  perform test_helpers.assert(v_active.status = 'active', 'second activation leaves job active');
+  perform test_helpers.assert(v_active.published_at = v_published, 'second activation does not rewrite published_at');
+  perform test_helpers.assert(public.mark_checkout_expired('cs_test_orbit_2') = 0, 'late expiry event does not demote revived job');
+
+  -- Rejected and draft jobs are never activated by a session id
+  update public.jobs set status = 'rejected' where id = v_job2_id;
+  v_active := public.activate_paid_job('cs_test_orbit_2', false);
+  perform test_helpers.assert(v_active.status = 'rejected', 'rejected job cannot be activated');
+  update public.jobs set status = 'draft' where id = v_job2_id;
+  v_active := public.activate_paid_job('cs_test_orbit_2', false);
+  perform test_helpers.assert(v_active.status = 'draft', 'draft job cannot be activated');
 end;
 $$;
 reset role;
