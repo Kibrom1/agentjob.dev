@@ -2,8 +2,9 @@ name: Ingest jobs
 
 on:
   schedule:
-    # Every 6 hours, at minute 17 to avoid the top-of-hour rush.
-    - cron: "17 */6 * * *"
+    # Daily at 11:15 UTC, about 2.75h before the 14:00 UTC digest cron so the
+    # Monday email always reads fresh data. Off the top of the hour to avoid the rush.
+    - cron: "15 11 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
