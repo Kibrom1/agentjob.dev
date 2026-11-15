@@ -8,7 +8,6 @@
 -- All existing parameters and behavior are unchanged when p_published_after
 -- is null (the default), including the default 30 for p_limit — this is
 -- purely additive.
-\set ON_ERROR_STOP on
 
 -- Postgres identifies functions by name + argument type list, so appending a
 -- new parameter is a distinct signature, not a same-signature replace:
